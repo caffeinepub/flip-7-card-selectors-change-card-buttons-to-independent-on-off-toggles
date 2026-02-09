@@ -1,0 +1,71 @@
+{
+  "kind": "implementation_plan",
+  "version": "1.0",
+  "title": "Flip 7 card selectors: convert card buttons to per-player independent toggles",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "summary": "Change Flip 7 per-player card grid controls (1–12, +4, +10) from additive buttons into per-player on/off toggles with no repeated accumulation.",
+      "acceptanceCriteria": [
+        "On the Flip 7 score entry card grid, clicking a card control toggles it between OFF and ON states for the current player.",
+        "When a card is ON, clicking it again turns it OFF (no repeated accumulation is possible).",
+        "The selected state is tracked per player (toggling a card for Player A does not change Player B’s state)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/scores/Flip7ScoreEntry.tsx",
+          "operation": "modify",
+          "description": "Replace additive tally state with per-player toggle state keyed by a stable card id (ensure 4 vs +4 are distinct). Update click handling to flip the selected state (on/off) for the current player only, preventing repeated accumulation."
+        }
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "summary": "Ensure all Flip 7 card toggles are independent (no mutual exclusivity) within each player.",
+      "acceptanceCriteria": [
+        "Turning one card toggle ON leaves all other card toggles unchanged (whether ON or OFF).",
+        "Turning one card toggle OFF leaves all other card toggles unchanged."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/scores/Flip7ScoreEntry.tsx",
+          "operation": "modify",
+          "description": "Implement toggle updates as a single-card state flip (add/remove that card id) without touching any other selected card ids for that same player, ensuring all toggles remain independent."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "Add clear, accessible on/off visual styling for Flip 7 card toggles so selected cards are obvious at a glance.",
+      "acceptanceCriteria": [
+        "Each card control has an obvious visual difference between OFF and ON states (e.g., filled/active vs outline/inactive, plus appropriate focus/hover states).",
+        "The on/off styling is accessible (maintains readable contrast and does not rely on color alone; e.g., includes a pressed state, check indicator, or equivalent)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/scores/Flip7ScoreEntry.tsx",
+          "operation": "modify",
+          "description": "Update card controls to reflect toggle state using existing composed UI (do not modify files under frontend/src/components/ui). Use distinct Button variants/classes for ON vs OFF, add aria-pressed, and include a non-color indicator (e.g., a check icon/text) plus appropriate focus/hover behavior."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Update Flip 7 tally, clear, validation, and submission-reset logic to use toggle selection sums for Button Tally.",
+      "acceptanceCriteria": [
+        "For a given player, the displayed Button Tally equals the sum of currently selected card values (including +4 and +10 if selected).",
+        "Toggling a card ON increases the tally by that card’s value; toggling it OFF decreases the tally by that card’s value.",
+        "The per-player Clear button turns OFF all selected card toggles for that player and sets that player’s Button Tally to 0.",
+        "The Add Round button enable/disable logic continues to work: a player is considered valid if they have a valid manual score OR at least one card toggle is ON (tally > 0).",
+        "After Add Round submission, all per-player toggle states reset to OFF (along with existing manual score and x2 reset behavior)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/scores/Flip7ScoreEntry.tsx",
+          "operation": "modify",
+          "description": "Compute per-player Button Tally as the sum of values for all toggles currently ON (derived from selected card ids). Update Clear to reset that player’s selected card ids. Keep final score logic: manual entry overrides tally, x2 multiplier applies to chosen base score. Update Add Round validation to treat tally>0 as valid when no valid manual score exists. After submission, reset toggle states along with existing manual score and x2 reset behavior."
+        }
+      ]
+    }
+  ]
+}

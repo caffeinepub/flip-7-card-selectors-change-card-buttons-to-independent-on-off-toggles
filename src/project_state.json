@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "New project",
+  "architectural_notes": [
+    "Flip 7 UI: each card selection control is an independent boolean toggle (user either has the card or not); toggling one card does not change any other card."
+  ],
+  "known_issues": [],
+  "isFixRequest": true,
+  "existing_features": [
+    {
+      "id": "feature-update-the-flip-7-score-entry-ui-so-each-per-player-card-selection-control-the-grid-items-for-1-12-4-10-behaves-as-an-on-off-toggle-representing-whether-that-player-has-that-card-rather-than-a-button-that-adds-repeatedly-to-the-tally",
+      "title": "Update the Flip 7 score entry UI so each per-player card selection control (the grid items for 1–12, +4, +10) behaves as an on/off toggle representing whether that player has that card, rather than a button that adds repeatedly to the tally.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-toggling-a-card-on-off-for-a-player-does-not-affect-any-other-card-s-state-for-that-same-player-no-mutual-exclusivity-all-card-toggles-are-independent",
+      "title": "Ensure toggling a card ON/OFF for a player does not affect any other card’s state for that same player (no mutual exclusivity); all card toggles are independent.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-visually-represent-each-card-selector-s-toggle-state-using-a-clear-standard-on-off-style-e-g-distinct-on-styling-vs-off-styling-so-users-can-tell-at-a-glance-which-cards-are-selected",
+      "title": "Visually represent each card selector’s toggle state using a clear, standard on/off style (e.g., distinct “on” styling vs “off” styling) so users can tell at a glance which cards are selected.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-flip-7-tally-and-validation-logic-to-reflect-toggle-selection-the-button-tally-value-must-equal-the-sum-of-values-of-all-toggles-currently-on-for-that-player-the-clear-action-must-reset-all-card-toggles-to-off-for-that-player",
+      "title": "Update Flip 7 tally and validation logic to reflect toggle selection: the “Button Tally” value must equal the sum of values of all toggles currently ON for that player; the “Clear” action must reset all card toggles to OFF for that player.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Update Flip 7 page: make each card selection button an independent on/off toggle with standard toggle styling (no effect on other cards)",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "projectName": "Flip 7 card selectors: change card buttons to independent on/off toggles",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}
