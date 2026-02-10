@@ -1,42 +1,44 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "New project",
+  "summary": "Scorecard app: add a new selectable game/scorecard (“Generic Game” / “Generic Scorecard”) based on Nerts-style scoring (numeric entry per player per round, auto-updating totals, unlimited rounds) using the existing player-selection approach.",
   "architectural_notes": [
-    "Flip 7 UI: each card selection control is an independent boolean toggle (user either has the card or not); toggling one card does not change any other card."
+    "Implement a reusable Nerts-style scorecard template: per-player numeric entry per round, auto-tally totals, unlimited rounds; new game can be created by duplicating this template and renaming."
   ],
-  "known_issues": [],
-  "isFixRequest": true,
+  "known_issues": [
+    "Builder/domain slug validation error encountered: name must be 5–50 characters and only letters, numbers, and hyphens (affected \"add-new-selectable-game-type:-generic-scorecard-(\")."
+  ],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-update-the-flip-7-score-entry-ui-so-each-per-player-card-selection-control-the-grid-items-for-1-12-4-10-behaves-as-an-on-off-toggle-representing-whether-that-player-has-that-card-rather-than-a-button-that-adds-repeatedly-to-the-tally",
-      "title": "Update the Flip 7 score entry UI so each per-player card selection control (the grid items for 1–12, +4, +10) behaves as an on/off toggle representing whether that player has that card, rather than a button that adds repeatedly to the tally.",
+      "id": "feature-add-a-new-selectable-game-template-named-generic-game-that-follows-the-previously-described-nerts-style-behavior-template-one-numeric-score-entry-per-player-per-round-totals-automatically-computed-from-entered-round-scores-and-unlimited-rounds-no-win-target-no-automatic-game-end",
+      "title": "Add a new selectable game template named \"Generic Game\" that follows the previously described Nerts-style behavior template: one numeric score entry per player per round, totals automatically computed from entered round scores, and unlimited rounds (no win target / no automatic game end).",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-ensure-toggling-a-card-on-off-for-a-player-does-not-affect-any-other-card-s-state-for-that-same-player-no-mutual-exclusivity-all-card-toggles-are-independent",
-      "title": "Ensure toggling a card ON/OFF for a player does not affect any other card’s state for that same player (no mutual exclusivity); all card toggles are independent.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-visually-represent-each-card-selector-s-toggle-state-using-a-clear-standard-on-off-style-e-g-distinct-on-styling-vs-off-styling-so-users-can-tell-at-a-glance-which-cards-are-selected",
-      "title": "Visually represent each card selector’s toggle state using a clear, standard on/off style (e.g., distinct “on” styling vs “off” styling) so users can tell at a glance which cards are selected.",
+      "id": "feature-frontend-update-template-type-plumbing-to-include-the-new-generic-game-across-the-app-gametemplates-route-param-usage-and-localsession-roundentrystate-typing-so-it-is-treated-as-a-first-class-game-type-like-the-existing-ones",
+      "title": "Frontend: update template/type plumbing to include the new Generic Game across the app (gameTemplates, route param usage, and LocalSession/RoundEntryState typing) so it is treated as a first-class game type like the existing ones.",
       "reqIds": [
         "REQ-3"
       ],
       "version": 1
     },
     {
-      "id": "feature-update-flip-7-tally-and-validation-logic-to-reflect-toggle-selection-the-button-tally-value-must-equal-the-sum-of-values-of-all-toggles-currently-on-for-that-player-the-clear-action-must-reset-all-card-toggles-to-off-for-that-player",
-      "title": "Update Flip 7 tally and validation logic to reflect toggle selection: the “Button Tally” value must equal the sum of values of all toggles currently ON for that player; the “Clear” action must reset all card toggles to OFF for that player.",
+      "id": "feature-frontend-implement-a-generic-game-round-entry-ui-component-that-matches-the-nerts-style-template-behavior-but-uses-a-single-numeric-input-per-player-one-number-per-player-per-round-it-must-validate-numeric-input-for-all-players-before-allowing-submission-and-then-submit-a-map-playerid-number-for-the-round",
+      "title": "Frontend: implement a Generic Game round-entry UI component that matches the Nerts-style template behavior but uses a single numeric input per player (one number per player per round). It must validate numeric input for all players before allowing submission and then submit a Map(playerId -> number) for the round.",
       "reqIds": [
         "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-frontend-integrate-generic-game-into-the-existing-score-sheet-and-round-editing-flows-so-users-can-add-rounds-and-edit-past-rounds-for-generic-game-just-like-other-round-based-games",
+      "title": "Frontend: integrate Generic Game into the existing score sheet and round editing flows so users can add rounds and edit past rounds for Generic Game just like other round-based games.",
+      "reqIds": [
+        "REQ-5"
       ],
       "version": 1
     }
@@ -44,12 +46,20 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Update Flip 7 page: make each card selection button an independent on/off toggle with standard toggle styling (no effect on other cards)",
+      "summary": "Add new selectable game/scorecard (Generic Game/Generic Scorecard) with Nerts-style scoring: per-player numeric entry each round, auto-updating totals, unlimited rounds, and players added via the same player-selection flow as other games.",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Backend: extend the Motoko GameType model and session creation flow to support the new \"Generic Game\" game type so that authenticated sessions can be created and scored (addRound/updateRound) the same way as existing round-based games.",
+      "reqIds": [
+        "REQ-2"
+      ],
       "status": "pending"
     }
   ],
-  "projectName": "Flip 7 card selectors: change card buttons to independent on/off toggles",
+  "projectName": "Add new Generic Game scorecard using Nerts-style numeric round entry",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

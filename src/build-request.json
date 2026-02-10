@@ -1,88 +1,112 @@
 {
   "kind": "build_request",
-  "title": "Flip 7 card selectors: change card buttons to independent on/off toggles",
+  "title": "Add new Generic Game scorecard using Nerts-style numeric round entry",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Update the Flip 7 score entry UI so each per-player card selection control (the grid items for 1–12, +4, +10) behaves as an on/off toggle representing whether that player has that card, rather than a button that adds repeatedly to the tally.",
-      "target": "frontend",
+      "text": "Add a new selectable game template named \"Generic Game\" that follows the previously described Nerts-style behavior template: one numeric score entry per player per round, totals automatically computed from entered round scores, and unlimited rounds (no win target / no automatic game end).",
+      "target": "both",
       "source": {
         "messageIds": [
-          "recent-messages"
+          "msg-1"
         ],
         "quotes": [
-          "Each card selection button should become a toggle signifying you either have that card or don’t."
+          "use the previously described \"Nerts‑style\" behavior (numeric entries, auto totals, unlimited rounds) as the template"
         ]
       },
       "acceptanceCriteria": [
-        "On the Flip 7 score entry card grid, clicking a card control toggles it between OFF and ON states for the current player.",
-        "When a card is ON, clicking it again turns it OFF (no repeated accumulation is possible).",
-        "The selected state is tracked per player (toggling a card for Player A does not change Player B’s state)."
+        "The home game picker shows a new card for \"Generic Game\" alongside the existing games.",
+        "Clicking \"Generic Game\" navigates to the existing setup flow at /setup/$gameType and then into the existing score sheet flow.",
+        "The game can accept additional rounds indefinitely without triggering a game-over state due to a target score."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Ensure toggling a card ON/OFF for a player does not affect any other card’s state for that same player (no mutual exclusivity); all card toggles are independent.",
-      "target": "frontend",
+      "text": "Backend: extend the Motoko GameType model and session creation flow to support the new \"Generic Game\" game type so that authenticated sessions can be created and scored (addRound/updateRound) the same way as existing round-based games.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "recent-messages"
+          "msg-1"
         ],
         "quotes": [
-          "When it is turned on it doesn’t affect any other card."
+          "numeric entries, auto totals, unlimited rounds"
         ]
       },
       "acceptanceCriteria": [
-        "Turning one card toggle ON leaves all other card toggles unchanged (whether ON or OFF).",
-        "Turning one card toggle OFF leaves all other card toggles unchanged."
+        "backend/main.mo GameType includes a new variant for the Generic Game.",
+        "createGameSession accepts the new game type without trapping.",
+        "addRound and updateRound succeed for Generic Game sessions and do not apply Nerts/Flip7 win-target ending logic to Generic Game sessions.",
+        "Existing game types (skyjo, milleBornes, nerts, flip7) continue to work unchanged."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "Visually represent each card selector’s toggle state using a clear, standard on/off style (e.g., distinct “on” styling vs “off” styling) so users can tell at a glance which cards are selected.",
+      "text": "Frontend: update template/type plumbing to include the new Generic Game across the app (gameTemplates, route param usage, and LocalSession/RoundEntryState typing) so it is treated as a first-class game type like the existing ones.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages"
+          "msg-1"
         ],
         "quotes": [
-          "The UI should visually show the toggle state in a standard on/off style."
+          "Use ... as the template"
         ]
       },
       "acceptanceCriteria": [
-        "Each card control has an obvious visual difference between OFF and ON states (e.g., filled/active vs outline/inactive, plus appropriate focus/hover states).",
-        "The on/off styling is accessible (maintains readable contrast and does not rely on color alone; e.g., includes a pressed state, check indicator, or equivalent)."
+        "frontend/src/gameTemplates.ts includes a new template entry for Generic Game with its own id, name, rulesSummary, gameEndCondition, scoringMethod, icon, and minPlayers/maxPlayers.",
+        "createGameType(...) and getGameTemplate(...) support the new Generic Game template id.",
+        "frontend/src/lib/sessionTypes.ts includes Generic Game in the LocalSession.gameType union and RoundEntryState union (with an entry state type appropriate for numeric entry).",
+        "SessionSetupScreen can start both profile-based and quick sessions for Generic Game without type errors or runtime errors."
       ]
     },
     {
       "id": "REQ-4",
-      "text": "Update Flip 7 tally and validation logic to reflect toggle selection: the “Button Tally” value must equal the sum of values of all toggles currently ON for that player; the “Clear” action must reset all card toggles to OFF for that player.",
+      "text": "Frontend: implement a Generic Game round-entry UI component that matches the Nerts-style template behavior but uses a single numeric input per player (one number per player per round). It must validate numeric input for all players before allowing submission and then submit a Map(playerId -> number) for the round.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "recent-messages"
+          "msg-1"
         ],
         "quotes": [
-          "Each card selection button should become a toggle signifying you either have that card or don’t."
+          "numeric entries, auto totals, unlimited rounds"
         ]
       },
       "acceptanceCriteria": [
-        "For a given player, the displayed Button Tally equals the sum of currently selected card values (including +4 and +10 if selected).",
-        "Toggling a card ON increases the tally by that card’s value; toggling it OFF decreases the tally by that card’s value.",
-        "The per-player Clear button turns OFF all selected card toggles for that player and sets that player’s Button Tally to 0.",
-        "The Add Round button enable/disable logic continues to work: a player is considered valid if they have a valid manual score OR at least one card toggle is ON (tally > 0).",
-        "After Add Round submission, all per-player toggle states reset to OFF (along with existing manual score and x2 reset behavior)."
+        "A new score entry component exists for Generic Game (similar integration level to NertsScoreEntry/SkyjoScoreEntry/etc.).",
+        "The round-entry UI displays each player with exactly one numeric input for the round score.",
+        "Submitting a round is blocked with a clear English error message if any player has an invalid/missing number.",
+        "On successful submit, the ScoreSheet adds a new round and the standings/totals update accordingly."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Frontend: integrate Generic Game into the existing score sheet and round editing flows so users can add rounds and edit past rounds for Generic Game just like other round-based games.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "unlimited rounds"
+        ]
+      },
+      "acceptanceCriteria": [
+        "frontend/src/screens/ScoreSheetScreen.tsx renders the Generic Game score entry component when the current session gameType is Generic Game.",
+        "frontend/src/components/scores/EditRoundDialog.tsx supports editing Generic Game rounds using the same Generic Game score entry component and confirmation flow.",
+        "Round History table continues to work and displays Generic Game round scores correctly.",
+        "checkGameEnd(...) does not end Generic Game sessions automatically."
       ]
     }
   ],
   "constraints": [
-    "Do not modify any files under frontend/src/components/ui (read-only UI component sources must be composed, not edited).",
-    "Backend behavior and data structures must remain unchanged; this is a Flip 7 frontend interaction change only."
+    "Backend must remain a single Motoko actor in backend/main.mo; only add a migration file if existing stable state requires it.",
+    "Do not edit files under frontend/src/components/ui or other immutablePaths listed in SYSTEM_CONTEXT.",
+    "Use English for all user-facing UI text."
   ],
   "nonGoals": [
-    "Do not add new Flip 7 scoring rules beyond changing card selection from incremental buttons to toggles.",
-    "Do not change the x2 multiplier behavior or the manual entry behavior aside from ensuring they continue to work with the new toggle-based tally."
+    "Do not implement Nerts itself beyond what already exists in the project.",
+    "Do not add third-party auth providers or external databases.",
+    "Do not add real-time/multiplayer synchronization; this is a local/session-based scorekeeping flow."
   ],
   "imageRequirements": {
     "required": [],

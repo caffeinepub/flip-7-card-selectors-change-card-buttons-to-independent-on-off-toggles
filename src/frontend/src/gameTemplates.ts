@@ -2,7 +2,7 @@ import type { GameType } from './backend';
 import { ScoringMethod } from './backend';
 
 export interface GameTemplate {
-  id: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7';
+  id: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'genericGame';
   name: string;
   rulesSummary: string;
   gameEndCondition: string;
@@ -57,9 +57,20 @@ export const GAME_TEMPLATES: Record<string, GameTemplate> = {
     minPlayers: 2,
     maxPlayers: 10,
   },
+  genericGame: {
+    id: 'genericGame',
+    name: 'Generic Game',
+    rulesSummary:
+      'A flexible scorecard for any game. Enter one numeric score per player per round, and totals are automatically calculated.',
+    gameEndCondition: 'No automatic end. Continue playing as many rounds as you like.',
+    scoringMethod: 'roundBased',
+    icon: '📊',
+    minPlayers: 1,
+    maxPlayers: 20,
+  },
 };
 
-export function createGameType(templateId: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7'): GameType {
+export function createGameType(templateId: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'genericGame'): GameType {
   const template = GAME_TEMPLATES[templateId];
   
   if (templateId === 'skyjo') {
@@ -91,7 +102,7 @@ export function createGameType(templateId: 'skyjo' | 'milleBornes' | 'nerts' | '
         winTarget: BigInt(200),
       },
     };
-  } else {
+  } else if (templateId === 'flip7') {
     return {
       __kind__: 'flip7',
       flip7: {
@@ -99,6 +110,15 @@ export function createGameType(templateId: 'skyjo' | 'milleBornes' | 'nerts' | '
         gameEndCondition: template.gameEndCondition,
         scoringMethod: ScoringMethod.roundBased,
         targetScore: BigInt(100),
+      },
+    };
+  } else {
+    return {
+      __kind__: 'genericGame',
+      genericGame: {
+        rulesSummary: template.rulesSummary,
+        gameEndCondition: template.gameEndCondition,
+        scoringMethod: ScoringMethod.roundBased,
       },
     };
   }
@@ -111,7 +131,9 @@ export function getGameTemplate(gameType: GameType): GameTemplate {
     return GAME_TEMPLATES.milleBornes;
   } else if (gameType.__kind__ === 'nerts') {
     return GAME_TEMPLATES.nerts;
-  } else {
+  } else if (gameType.__kind__ === 'flip7') {
     return GAME_TEMPLATES.flip7;
+  } else {
+    return GAME_TEMPLATES.genericGame;
   }
 }

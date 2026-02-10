@@ -2,117 +2,142 @@ import { useState } from 'react';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
-import type { SessionPlayer } from '../../lib/sessionTypes';
+import type { SessionPlayer, NertsEntryState } from '../../lib/sessionTypes';
 
 interface NertsScoreEntryProps {
   players: SessionPlayer[];
-  onSubmit: (scores: Map<string, number>) => void;
+  onSubmit: (scores: Map<string, number>, entryState: NertsEntryState) => void;
+  initialState?: NertsEntryState;
 }
 
-export default function NertsScoreEntry({ players, onSubmit }: NertsScoreEntryProps) {
-  const [centerCards, setCenterCards] = useState<Map<string, string>>(new Map());
-  const [tableauCards, setTableauCards] = useState<Map<string, string>>(new Map());
+export default function NertsScoreEntry({ players, onSubmit, initialState }: NertsScoreEntryProps) {
+  const [centerCards, setCenterCards] = useState<Map<string, string>>(() => {
+    const initial = new Map<string, string>();
+    if (initialState) {
+      initialState.centerCards.forEach((val, playerId) => {
+        initial.set(playerId, val.toString());
+      });
+    } else {
+      players.forEach((player) => {
+        const playerId = typeof player.id === 'bigint' ? player.id.toString() : player.id;
+        initial.set(playerId, '');
+      });
+    }
+    return initial;
+  });
+
+  const [tableauCards, setTableauCards] = useState<Map<string, string>>(() => {
+    const initial = new Map<string, string>();
+    if (initialState) {
+      initialState.tableauCards.forEach((val, playerId) => {
+        initial.set(playerId, val.toString());
+      });
+    } else {
+      players.forEach((player) => {
+        const playerId = typeof player.id === 'bigint' ? player.id.toString() : player.id;
+        initial.set(playerId, '');
+      });
+    }
+    return initial;
+  });
 
   const handleCenterChange = (playerId: string, value: string) => {
-    const newCenterCards = new Map(centerCards);
-    newCenterCards.set(playerId, value);
-    setCenterCards(newCenterCards);
+    const newCenter = new Map(centerCards);
+    newCenter.set(playerId, value);
+    setCenterCards(newCenter);
   };
 
   const handleTableauChange = (playerId: string, value: string) => {
-    const newTableauCards = new Map(tableauCards);
-    newTableauCards.set(playerId, value);
-    setTableauCards(newTableauCards);
+    const newTableau = new Map(tableauCards);
+    newTableau.set(playerId, value);
+    setTableauCards(newTableau);
+  };
+
+  const calculateScore = (playerId: string): number => {
+    const center = parseInt(centerCards.get(playerId) || '0', 10);
+    const tableau = parseInt(tableauCards.get(playerId) || '0', 10);
+    return (isNaN(center) ? 0 : center) - 2 * (isNaN(tableau) ? 0 : tableau);
   };
 
   const handleSubmit = () => {
     const scores = new Map<string, number>();
+    const numericCenter = new Map<string, number>();
+    const numericTableau = new Map<string, number>();
     let allValid = true;
 
     players.forEach((player) => {
       const playerId = typeof player.id === 'bigint' ? player.id.toString() : player.id;
-      const centerStr = centerCards.get(playerId) || '0';
-      const tableauStr = tableauCards.get(playerId) || '0';
-      
-      const center = parseInt(centerStr, 10);
-      const tableau = parseInt(tableauStr, 10);
-      
+      const center = parseInt(centerCards.get(playerId) || '', 10);
+      const tableau = parseInt(tableauCards.get(playerId) || '', 10);
+
       if (isNaN(center) || isNaN(tableau)) {
         allValid = false;
       } else {
-        const score = center - (2 * tableau);
+        const score = center - 2 * tableau;
         scores.set(playerId, score);
+        numericCenter.set(playerId, center);
+        numericTableau.set(playerId, tableau);
       }
     });
 
-    if (allValid) {
-      onSubmit(scores);
-      setCenterCards(new Map());
-      setTableauCards(new Map());
+    if (!allValid) {
+      alert('Please enter valid numbers for all players');
+      return;
     }
+
+    const entryState: NertsEntryState = {
+      centerCards: numericCenter,
+      tableauCards: numericTableau,
+    };
+
+    onSubmit(scores, entryState);
   };
 
-  const allFilled = players.every((player) => {
-    const playerId = typeof player.id === 'bigint' ? player.id.toString() : player.id;
-    const centerValue = centerCards.get(playerId);
-    const tableauValue = tableauCards.get(playerId);
-    return centerValue !== undefined && centerValue !== '' && 
-           tableauValue !== undefined && tableauValue !== '';
-  });
-
   return (
-    <div className="space-y-6">
-      <div className="space-y-4">
-        {players.map((player) => {
-          const playerId = typeof player.id === 'bigint' ? player.id.toString() : player.id;
-          const center = centerCards.get(playerId) || '';
-          const tableau = tableauCards.get(playerId) || '';
-          
-          const centerNum = parseInt(center, 10) || 0;
-          const tableauNum = parseInt(tableau, 10) || 0;
-          const calculatedScore = centerNum - (2 * tableauNum);
-          
-          return (
-            <div key={playerId} className="p-4 rounded-lg border bg-accent/20 space-y-3">
+    <div className="space-y-4">
+      {players.map((player) => {
+        const playerId = typeof player.id === 'bigint' ? player.id.toString() : player.id;
+        const score = calculateScore(playerId);
+
+        return (
+          <div key={playerId} className="space-y-3 p-4 border rounded-lg">
+            <div className="flex items-center justify-between">
               <h3 className="font-semibold">{player.name}</h3>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor={`center-${playerId}`}>Center cards played</Label>
-                  <Input
-                    id={`center-${playerId}`}
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    value={center}
-                    onChange={(e) => handleCenterChange(playerId, e.target.value)}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor={`tableau-${playerId}`}>Cards left in tableau</Label>
-                  <Input
-                    id={`tableau-${playerId}`}
-                    type="number"
-                    min="0"
-                    placeholder="0"
-                    value={tableau}
-                    onChange={(e) => handleTableauChange(playerId, e.target.value)}
-                  />
-                </div>
+              <div className="text-right">
+                <p className="text-xs text-muted-foreground">Round Score</p>
+                <p className="text-xl font-bold">{isNaN(score) ? '-' : score}</p>
               </div>
-              {(center !== '' || tableau !== '') && (
-                <div className="text-sm text-muted-foreground">
-                  Round score: <span className="font-semibold text-foreground">{calculatedScore}</span>
-                  {centerNum > 0 && <span className="ml-2">(+{centerNum} center</span>}
-                  {tableauNum > 0 && <span>{centerNum > 0 ? ', ' : '('}-{tableauNum * 2} tableau)</span>}
-                  {(centerNum > 0 || tableauNum > 0) && ')'}
-                </div>
-              )}
             </div>
-          );
-        })}
-      </div>
-      <Button onClick={handleSubmit} disabled={!allFilled} className="w-full">
-        Add Round
+
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-2">
+                <Label htmlFor={`center-${playerId}`}>Center Cards</Label>
+                <Input
+                  id={`center-${playerId}`}
+                  type="number"
+                  placeholder="0"
+                  value={centerCards.get(playerId) || ''}
+                  onChange={(e) => handleCenterChange(playerId, e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor={`tableau-${playerId}`}>Tableau Left</Label>
+                <Input
+                  id={`tableau-${playerId}`}
+                  type="number"
+                  placeholder="0"
+                  value={tableauCards.get(playerId) || ''}
+                  onChange={(e) => handleTableauChange(playerId, e.target.value)}
+                />
+              </div>
+            </div>
+          </div>
+        );
+      })}
+
+      <Button onClick={handleSubmit} className="w-full">
+        Submit Round
       </Button>
     </div>
   );

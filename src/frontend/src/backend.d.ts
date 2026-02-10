@@ -7,6 +7,11 @@ export interface None {
     __kind__: "None";
 }
 export type Option<T> = Some<T> | None;
+export interface GenericGameRules {
+    scoringMethod: ScoringMethod;
+    rulesSummary: string;
+    gameEndCondition: string;
+}
 export type GameType = {
     __kind__: "flip7";
     flip7: {
@@ -25,6 +30,9 @@ export type GameType = {
 } | {
     __kind__: "nerts";
     nerts: NertsRules;
+} | {
+    __kind__: "genericGame";
+    genericGame: GenericGameRules;
 } | {
     __kind__: "milleBornes";
     milleBornes: {
@@ -110,4 +118,5 @@ export interface backendInterface {
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    updateRound(gameId: bigint, roundNumber: bigint, scores: Array<PlayerScore>): Promise<void>;
 }

@@ -1,12 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Change the Flip 7 per-player card selectors from repeatable “add” buttons into independent on/off toggles that drive the per-player tally and validation.
+**Goal:** Add a new selectable “Generic Game” scorecard template that uses Nerts-style numeric round entry (one number per player per round), auto-computed totals, and unlimited rounds with no automatic game end.
 
 **Planned changes:**
-- Update the Flip 7 score entry card grid (1–12, +4, +10) so each card control toggles ON/OFF per player (no repeated accumulation).
-- Ensure all card toggles are independent (turning one ON/OFF does not change any other card’s state for the same player).
-- Add clear, accessible visual styling to distinguish ON vs OFF states (including non-color-only indication and appropriate focus/hover states).
-- Update per-player Button Tally, Clear, and Add Round/reset behavior to reflect toggle state: tally equals the sum of all ON toggles; Clear resets all toggles OFF and sets tally to 0; after Add Round, toggles reset OFF (along with existing manual score and x2 reset behavior).
+- Add a new “Generic Game” card to the home game picker that routes through the existing setup flow (/setup/$gameType) into the existing score sheet flow.
+- Backend: extend the Motoko GameType model and session creation/scoring flows to support “Generic Game” sessions, including addRound/updateRound, without applying win-target game-ending logic.
+- Frontend: add “Generic Game” to gameTemplates and template/type plumbing (route params, LocalSession.gameType, RoundEntryState) so it behaves like existing round-based games.
+- Frontend: implement a Generic Game round-entry component with exactly one numeric input per player per round, validation (block submit with a clear English error if any value is invalid/missing), and submission as Map(playerId -> number).
+- Frontend: integrate Generic Game into ScoreSheet and EditRound flows so rounds can be added and edited, round history displays correctly, and checkGameEnd does not end sessions automatically.
 
-**User-visible outcome:** Each player can tap card values to toggle them ON/OFF, instantly seeing the tally update based on selected cards; Clear and Add Round behave as before but now reset the toggle selections appropriately.
+**User-visible outcome:** Users can choose “Generic Game,” set up a session, enter one numeric score per player per round for unlimited rounds, see totals update automatically, and edit past rounds without the game ending due to a target score.

@@ -89,6 +89,11 @@ export class ExternalBlob {
         return this;
     }
 }
+export interface GenericGameRules {
+    scoringMethod: ScoringMethod;
+    rulesSummary: string;
+    gameEndCondition: string;
+}
 export type GameType = {
     __kind__: "flip7";
     flip7: {
@@ -107,6 +112,9 @@ export type GameType = {
 } | {
     __kind__: "nerts";
     nerts: NertsRules;
+} | {
+    __kind__: "genericGame";
+    genericGame: GenericGameRules;
 } | {
     __kind__: "milleBornes";
     milleBornes: {
@@ -193,8 +201,9 @@ export interface backendInterface {
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    updateRound(gameId: bigint, roundNumber: bigint, scores: Array<PlayerScore>): Promise<void>;
 }
-import type { Fields as _Fields, Fields__1 as _Fields__1, Fields__2 as _Fields__2, GameSession as _GameSession, GameType as _GameType, NertsRules as _NertsRules, ScoringMethod as _ScoringMethod, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { Fields as _Fields, Fields__1 as _Fields__1, Fields__2 as _Fields__2, GameSession as _GameSession, GameType as _GameType, GenericGameRules as _GenericGameRules, NertsRules as _NertsRules, ScoringMethod as _ScoringMethod, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -242,14 +251,14 @@ export class Backend implements backendInterface {
     async createGameSession(arg0: GameType, arg1: Array<bigint>, arg2: bigint | null, arg3: bigint | null): Promise<bigint> {
         if (this.processError) {
             try {
-                const result = await this.actor.createGameSession(to_candid_GameType_n3(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_opt_n11(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n11(this._uploadFile, this._downloadFile, arg3));
+                const result = await this.actor.createGameSession(to_candid_GameType_n3(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_opt_n12(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n12(this._uploadFile, this._downloadFile, arg3));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.createGameSession(to_candid_GameType_n3(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_opt_n11(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n11(this._uploadFile, this._downloadFile, arg3));
+            const result = await this.actor.createGameSession(to_candid_GameType_n3(this._uploadFile, this._downloadFile, arg0), arg1, to_candid_opt_n12(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n12(this._uploadFile, this._downloadFile, arg3));
             return result;
         }
     }
@@ -271,14 +280,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getAllGameSessions();
-                return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+                return from_candid_vec_n13(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getAllGameSessions();
-            return from_candid_vec_n12(this._uploadFile, this._downloadFile, result);
+            return from_candid_vec_n13(this._uploadFile, this._downloadFile, result);
         }
     }
     async getAllPlayerProfiles(): Promise<Array<PlayerProfile>> {
@@ -313,42 +322,42 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserProfile();
-                return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserProfile();
-            return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
         }
     }
     async getCallerUserRole(): Promise<UserRole> {
         if (this.processError) {
             try {
                 const result = await this.actor.getCallerUserRole();
-                return from_candid_UserRole_n29(this._uploadFile, this._downloadFile, result);
+                return from_candid_UserRole_n31(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getCallerUserRole();
-            return from_candid_UserRole_n29(this._uploadFile, this._downloadFile, result);
+            return from_candid_UserRole_n31(this._uploadFile, this._downloadFile, result);
         }
     }
     async getGameSession(arg0: bigint): Promise<GameSession> {
         if (this.processError) {
             try {
                 const result = await this.actor.getGameSession(arg0);
-                return from_candid_GameSession_n13(this._uploadFile, this._downloadFile, result);
+                return from_candid_GameSession_n14(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getGameSession(arg0);
-            return from_candid_GameSession_n13(this._uploadFile, this._downloadFile, result);
+            return from_candid_GameSession_n14(this._uploadFile, this._downloadFile, result);
         }
     }
     async getPlayerProfile(arg0: bigint): Promise<PlayerProfile> {
@@ -369,14 +378,14 @@ export class Backend implements backendInterface {
         if (this.processError) {
             try {
                 const result = await this.actor.getUserProfile(arg0);
-                return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
+                return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
             const result = await this.actor.getUserProfile(arg0);
-            return from_candid_opt_n25(this._uploadFile, this._downloadFile, result);
+            return from_candid_opt_n27(this._uploadFile, this._downloadFile, result);
         }
     }
     async isCallerAdmin(): Promise<boolean> {
@@ -396,49 +405,66 @@ export class Backend implements backendInterface {
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n31(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n33(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n31(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n33(this._uploadFile, this._downloadFile, arg0));
+            return result;
+        }
+    }
+    async updateRound(arg0: bigint, arg1: bigint, arg2: Array<PlayerScore>): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateRound(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateRound(arg0, arg1, arg2);
             return result;
         }
     }
 }
-function from_candid_GameSession_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _GameSession): GameSession {
-    return from_candid_record_n14(_uploadFile, _downloadFile, value);
+function from_candid_GameSession_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _GameSession): GameSession {
+    return from_candid_record_n15(_uploadFile, _downloadFile, value);
 }
-function from_candid_GameType_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _GameType): GameType {
-    return from_candid_variant_n18(_uploadFile, _downloadFile, value);
+function from_candid_GameType_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _GameType): GameType {
+    return from_candid_variant_n19(_uploadFile, _downloadFile, value);
 }
-function from_candid_NertsRules_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _NertsRules): NertsRules {
-    return from_candid_record_n24(_uploadFile, _downloadFile, value);
+function from_candid_GenericGameRules_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _GenericGameRules): GenericGameRules {
+    return from_candid_record_n23(_uploadFile, _downloadFile, value);
 }
-function from_candid_ScoringMethod_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ScoringMethod): ScoringMethod {
-    return from_candid_variant_n21(_uploadFile, _downloadFile, value);
+function from_candid_NertsRules_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _NertsRules): NertsRules {
+    return from_candid_record_n25(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserProfile_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserProfile): UserProfile {
-    return from_candid_record_n27(_uploadFile, _downloadFile, value);
+function from_candid_ScoringMethod_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _ScoringMethod): ScoringMethod {
+    return from_candid_variant_n22(_uploadFile, _downloadFile, value);
 }
-function from_candid_UserRole_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
-    return from_candid_variant_n30(_uploadFile, _downloadFile, value);
+function from_candid_UserProfile_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserProfile): UserProfile {
+    return from_candid_record_n29(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [Array<_Fields>]): Array<Fields> | null {
+function from_candid_UserRole_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
+    return from_candid_variant_n32(_uploadFile, _downloadFile, value);
+}
+function from_candid_opt_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [Array<_Fields>]): Array<Fields> | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
+function from_candid_opt_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [bigint]): bigint | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_opt_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
-    return value.length === 0 ? null : from_candid_UserProfile_n26(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
+    return value.length === 0 ? null : from_candid_UserProfile_n28(_uploadFile, _downloadFile, value[0]);
 }
-function from_candid_opt_n28(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
+function from_candid_opt_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [string]): string | null {
     return value.length === 0 ? null : value[0];
 }
-function from_candid_record_n14(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n15(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: bigint;
     owner: Principal;
     createdAt: bigint;
@@ -467,14 +493,14 @@ function from_candid_record_n14(_uploadFile: (file: ExternalBlob) => Promise<Uin
         createdAt: value.createdAt,
         isActive: value.isActive,
         players: value.players,
-        finalScores: record_opt_to_undefined(from_candid_opt_n15(_uploadFile, _downloadFile, value.finalScores)),
-        flip7TargetScore: record_opt_to_undefined(from_candid_opt_n16(_uploadFile, _downloadFile, value.flip7TargetScore)),
-        gameType: from_candid_GameType_n17(_uploadFile, _downloadFile, value.gameType),
+        finalScores: record_opt_to_undefined(from_candid_opt_n16(_uploadFile, _downloadFile, value.finalScores)),
+        flip7TargetScore: record_opt_to_undefined(from_candid_opt_n17(_uploadFile, _downloadFile, value.flip7TargetScore)),
+        gameType: from_candid_GameType_n18(_uploadFile, _downloadFile, value.gameType),
         rounds: value.rounds,
-        nertsWinTarget: record_opt_to_undefined(from_candid_opt_n16(_uploadFile, _downloadFile, value.nertsWinTarget))
+        nertsWinTarget: record_opt_to_undefined(from_candid_opt_n17(_uploadFile, _downloadFile, value.nertsWinTarget))
     };
 }
-function from_candid_record_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     targetScore: bigint;
     scoringMethod: _ScoringMethod;
     rulesSummary: string;
@@ -487,12 +513,12 @@ function from_candid_record_n19(_uploadFile: (file: ExternalBlob) => Promise<Uin
 } {
     return {
         targetScore: value.targetScore,
-        scoringMethod: from_candid_ScoringMethod_n20(_uploadFile, _downloadFile, value.scoringMethod),
+        scoringMethod: from_candid_ScoringMethod_n21(_uploadFile, _downloadFile, value.scoringMethod),
         rulesSummary: value.rulesSummary,
         gameEndCondition: value.gameEndCondition
     };
 }
-function from_candid_record_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     scoringMethod: _ScoringMethod;
     rulesSummary: string;
     gameEndCondition: string;
@@ -502,12 +528,12 @@ function from_candid_record_n22(_uploadFile: (file: ExternalBlob) => Promise<Uin
     gameEndCondition: string;
 } {
     return {
-        scoringMethod: from_candid_ScoringMethod_n20(_uploadFile, _downloadFile, value.scoringMethod),
+        scoringMethod: from_candid_ScoringMethod_n21(_uploadFile, _downloadFile, value.scoringMethod),
         rulesSummary: value.rulesSummary,
         gameEndCondition: value.gameEndCondition
     };
 }
-function from_candid_record_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     winTarget: bigint;
     scoringDetails: string;
     scoringMethod: _ScoringMethod;
@@ -523,12 +549,12 @@ function from_candid_record_n24(_uploadFile: (file: ExternalBlob) => Promise<Uin
     return {
         winTarget: value.winTarget,
         scoringDetails: value.scoringDetails,
-        scoringMethod: from_candid_ScoringMethod_n20(_uploadFile, _downloadFile, value.scoringMethod),
+        scoringMethod: from_candid_ScoringMethod_n21(_uploadFile, _downloadFile, value.scoringMethod),
         rulesSummary: value.rulesSummary,
         gameEndCondition: value.gameEndCondition
     };
 }
-function from_candid_record_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_record_n29(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     name: string;
     email: [] | [string];
 }): {
@@ -537,10 +563,10 @@ function from_candid_record_n27(_uploadFile: (file: ExternalBlob) => Promise<Uin
 } {
     return {
         name: value.name,
-        email: record_opt_to_undefined(from_candid_opt_n28(_uploadFile, _downloadFile, value.email))
+        email: record_opt_to_undefined(from_candid_opt_n30(_uploadFile, _downloadFile, value.email))
     };
 }
-function from_candid_variant_n18(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     flip7: {
         targetScore: bigint;
         scoringMethod: _ScoringMethod;
@@ -555,6 +581,8 @@ function from_candid_variant_n18(_uploadFile: (file: ExternalBlob) => Promise<Ui
     };
 } | {
     nerts: _NertsRules;
+} | {
+    genericGame: _GenericGameRules;
 } | {
     milleBornes: {
         scoringMethod: _ScoringMethod;
@@ -580,6 +608,9 @@ function from_candid_variant_n18(_uploadFile: (file: ExternalBlob) => Promise<Ui
     __kind__: "nerts";
     nerts: NertsRules;
 } | {
+    __kind__: "genericGame";
+    genericGame: GenericGameRules;
+} | {
     __kind__: "milleBornes";
     milleBornes: {
         scoringMethod: ScoringMethod;
@@ -589,26 +620,29 @@ function from_candid_variant_n18(_uploadFile: (file: ExternalBlob) => Promise<Ui
 } {
     return "flip7" in value ? {
         __kind__: "flip7",
-        flip7: from_candid_record_n19(_uploadFile, _downloadFile, value.flip7)
+        flip7: from_candid_record_n20(_uploadFile, _downloadFile, value.flip7)
     } : "skyjo" in value ? {
         __kind__: "skyjo",
-        skyjo: from_candid_record_n22(_uploadFile, _downloadFile, value.skyjo)
+        skyjo: from_candid_record_n23(_uploadFile, _downloadFile, value.skyjo)
     } : "nerts" in value ? {
         __kind__: "nerts",
-        nerts: from_candid_NertsRules_n23(_uploadFile, _downloadFile, value.nerts)
+        nerts: from_candid_NertsRules_n24(_uploadFile, _downloadFile, value.nerts)
+    } : "genericGame" in value ? {
+        __kind__: "genericGame",
+        genericGame: from_candid_GenericGameRules_n26(_uploadFile, _downloadFile, value.genericGame)
     } : "milleBornes" in value ? {
         __kind__: "milleBornes",
-        milleBornes: from_candid_record_n22(_uploadFile, _downloadFile, value.milleBornes)
+        milleBornes: from_candid_record_n23(_uploadFile, _downloadFile, value.milleBornes)
     } : value;
 }
-function from_candid_variant_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     roundBased: null;
 } | {
     endOfGame: null;
 }): ScoringMethod {
     return "roundBased" in value ? ScoringMethod.roundBased : "endOfGame" in value ? ScoringMethod.endOfGame : value;
 }
-function from_candid_variant_n30(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function from_candid_variant_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     admin: null;
 } | {
     user: null;
@@ -617,28 +651,52 @@ function from_candid_variant_n30(_uploadFile: (file: ExternalBlob) => Promise<Ui
 }): UserRole {
     return "admin" in value ? UserRole.admin : "user" in value ? UserRole.user : "guest" in value ? UserRole.guest : value;
 }
-function from_candid_vec_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_GameSession>): Array<GameSession> {
-    return value.map((x)=>from_candid_GameSession_n13(_uploadFile, _downloadFile, x));
+function from_candid_vec_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_GameSession>): Array<GameSession> {
+    return value.map((x)=>from_candid_GameSession_n14(_uploadFile, _downloadFile, x));
 }
 function to_candid_GameType_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: GameType): _GameType {
     return to_candid_variant_n4(_uploadFile, _downloadFile, value);
 }
-function to_candid_NertsRules_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: NertsRules): _NertsRules {
-    return to_candid_record_n9(_uploadFile, _downloadFile, value);
+function to_candid_GenericGameRules_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: GenericGameRules): _GenericGameRules {
+    return to_candid_record_n5(_uploadFile, _downloadFile, value);
+}
+function to_candid_NertsRules_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: NertsRules): _NertsRules {
+    return to_candid_record_n10(_uploadFile, _downloadFile, value);
 }
 function to_candid_ScoringMethod_n6(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: ScoringMethod): _ScoringMethod {
     return to_candid_variant_n7(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserProfile_n31(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
-    return to_candid_record_n32(_uploadFile, _downloadFile, value);
+function to_candid_UserProfile_n33(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
+    return to_candid_record_n34(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n2(_uploadFile, _downloadFile, value);
 }
-function to_candid_opt_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: bigint | null): [] | [bigint] {
+function to_candid_opt_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: bigint | null): [] | [bigint] {
     return value === null ? candid_none() : candid_some(value);
 }
 function to_candid_record_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    winTarget: bigint;
+    scoringDetails: string;
+    scoringMethod: ScoringMethod;
+    rulesSummary: string;
+    gameEndCondition: string;
+}): {
+    winTarget: bigint;
+    scoringDetails: string;
+    scoringMethod: _ScoringMethod;
+    rulesSummary: string;
+    gameEndCondition: string;
+} {
+    return {
+        winTarget: value.winTarget,
+        scoringDetails: value.scoringDetails,
+        scoringMethod: to_candid_ScoringMethod_n6(_uploadFile, _downloadFile, value.scoringMethod),
+        rulesSummary: value.rulesSummary,
+        gameEndCondition: value.gameEndCondition
+    };
+}
+function to_candid_record_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     targetScore: bigint;
     scoringMethod: ScoringMethod;
     rulesSummary: string;
@@ -656,7 +714,7 @@ function to_candid_record_n10(_uploadFile: (file: ExternalBlob) => Promise<Uint8
         gameEndCondition: value.gameEndCondition
     };
 }
-function to_candid_record_n32(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n34(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     name: string;
     email?: string;
 }): {
@@ -678,27 +736,6 @@ function to_candid_record_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
     gameEndCondition: string;
 } {
     return {
-        scoringMethod: to_candid_ScoringMethod_n6(_uploadFile, _downloadFile, value.scoringMethod),
-        rulesSummary: value.rulesSummary,
-        gameEndCondition: value.gameEndCondition
-    };
-}
-function to_candid_record_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
-    winTarget: bigint;
-    scoringDetails: string;
-    scoringMethod: ScoringMethod;
-    rulesSummary: string;
-    gameEndCondition: string;
-}): {
-    winTarget: bigint;
-    scoringDetails: string;
-    scoringMethod: _ScoringMethod;
-    rulesSummary: string;
-    gameEndCondition: string;
-} {
-    return {
-        winTarget: value.winTarget,
-        scoringDetails: value.scoringDetails,
         scoringMethod: to_candid_ScoringMethod_n6(_uploadFile, _downloadFile, value.scoringMethod),
         rulesSummary: value.rulesSummary,
         gameEndCondition: value.gameEndCondition
@@ -738,6 +775,9 @@ function to_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8
     __kind__: "nerts";
     nerts: NertsRules;
 } | {
+    __kind__: "genericGame";
+    genericGame: GenericGameRules;
+} | {
     __kind__: "milleBornes";
     milleBornes: {
         scoringMethod: ScoringMethod;
@@ -760,6 +800,8 @@ function to_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8
 } | {
     nerts: _NertsRules;
 } | {
+    genericGame: _GenericGameRules;
+} | {
     milleBornes: {
         scoringMethod: _ScoringMethod;
         rulesSummary: string;
@@ -767,11 +809,13 @@ function to_candid_variant_n4(_uploadFile: (file: ExternalBlob) => Promise<Uint8
     };
 } {
     return value.__kind__ === "flip7" ? {
-        flip7: to_candid_record_n10(_uploadFile, _downloadFile, value.flip7)
+        flip7: to_candid_record_n11(_uploadFile, _downloadFile, value.flip7)
     } : value.__kind__ === "skyjo" ? {
         skyjo: to_candid_record_n5(_uploadFile, _downloadFile, value.skyjo)
     } : value.__kind__ === "nerts" ? {
-        nerts: to_candid_NertsRules_n8(_uploadFile, _downloadFile, value.nerts)
+        nerts: to_candid_NertsRules_n9(_uploadFile, _downloadFile, value.nerts)
+    } : value.__kind__ === "genericGame" ? {
+        genericGame: to_candid_GenericGameRules_n8(_uploadFile, _downloadFile, value.genericGame)
     } : value.__kind__ === "milleBornes" ? {
         milleBornes: to_candid_record_n5(_uploadFile, _downloadFile, value.milleBornes)
     } : value;

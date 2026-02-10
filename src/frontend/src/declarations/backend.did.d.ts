@@ -52,6 +52,7 @@ export type GameType = {
     }
   } |
   { 'nerts' : NertsRules } |
+  { 'genericGame' : GenericGameRules } |
   {
     'milleBornes' : {
       'scoringMethod' : ScoringMethod,
@@ -59,6 +60,11 @@ export type GameType = {
       'gameEndCondition' : string,
     }
   };
+export interface GenericGameRules {
+  'scoringMethod' : ScoringMethod,
+  'rulesSummary' : string,
+  'gameEndCondition' : string,
+}
 export interface NertsRules {
   'winTarget' : bigint,
   'scoringDetails' : string,
@@ -101,6 +107,7 @@ export interface _SERVICE {
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'updateRound' : ActorMethod<[bigint, bigint, Array<PlayerScore>], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

@@ -33,13 +33,13 @@ export function useCreateGameSession() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ 
-      gameType, 
-      playerIds, 
+    mutationFn: async ({
+      gameType,
+      playerIds,
       nertsWinTarget,
-      flip7TargetScore
-    }: { 
-      gameType: GameType; 
+      flip7TargetScore,
+    }: {
+      gameType: GameType;
       playerIds: bigint[];
       nertsWinTarget?: bigint;
       flip7TargetScore?: bigint;
@@ -69,6 +69,30 @@ export function useAddRound() {
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.addRound(gameId, roundNumber, scores);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['gameSession', variables.gameId.toString()] });
+      queryClient.invalidateQueries({ queryKey: ['gameSessions'] });
+    },
+  });
+}
+
+export function useUpdateRound() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      gameId,
+      roundNumber,
+      scores,
+    }: {
+      gameId: bigint;
+      roundNumber: bigint;
+      scores: PlayerScore[];
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.updateRound(gameId, roundNumber, scores);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['gameSession', variables.gameId.toString()] });

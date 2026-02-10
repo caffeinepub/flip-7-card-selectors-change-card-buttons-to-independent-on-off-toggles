@@ -87,11 +87,22 @@ export default {
                 'accordion-up': {
                     from: { height: 'var(--radix-accordion-content-height)' },
                     to: { height: '0' }
+                },
+                'celebrate': {
+                    '0%, 100%': { 
+                        transform: 'scale(1)',
+                        boxShadow: '0 0 0 0 oklch(var(--primary) / 0)'
+                    },
+                    '50%': { 
+                        transform: 'scale(1.02)',
+                        boxShadow: '0 0 20px 4px oklch(var(--primary) / 0.3)'
+                    }
                 }
             },
             animation: {
                 'accordion-down': 'accordion-down 0.2s ease-out',
-                'accordion-up': 'accordion-up 0.2s ease-out'
+                'accordion-up': 'accordion-up 0.2s ease-out',
+                'celebrate': 'celebrate 0.6s ease-in-out'
             }
         }
     },

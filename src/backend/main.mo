@@ -6,11 +6,13 @@ import Nat "mo:core/Nat";
 import Order "mo:core/Order";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
+import Migration "migration";
+
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
-
-
+// Migrate the actor state on upgrade
+(with migration = Migration.run)
 actor {
   type GameType = {
     #skyjo : {
@@ -30,6 +32,7 @@ actor {
       scoringMethod : ScoringMethod;
       targetScore : Nat;
     };
+    #genericGame : GenericGameRules;
   };
 
   type ScoringMethod = {
@@ -82,6 +85,18 @@ actor {
     gameEndCondition = "Game ends when a player reaches 100 total points.";
     scoringMethod = #roundBased;
     targetScore = 100;
+  };
+
+  type GenericGameRules = {
+    rulesSummary : Text;
+    gameEndCondition : Text;
+    scoringMethod : ScoringMethod;
+  };
+
+  let genericGameRules : GenericGameRules = {
+    rulesSummary = "A generic game allows for unlimited rounds with one numeric score per player per round. Totals are automatically computed from entered round scores. Ideal for tracking scores in various games.";
+    gameEndCondition = "There is no automatic game end. The game continues until players decide to stop.";
+    scoringMethod = #roundBased;
   };
 
   module GameSession {
@@ -203,18 +218,32 @@ actor {
   };
 
   public query ({ caller }) func getPlayerProfile(profileId : Nat) : async PlayerProfile {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view player profiles");
+    };
     switch (playerProfiles.get(profileId)) {
       case (null) { Runtime.trap("Player profile does not exist") };
-      case (?profile) { profile };
+      case (?profile) {
+        if (profile.owner != caller and not AccessControl.isAdmin(accessControlState, caller)) {
+          Runtime.trap("Unauthorized: Can only view your own player profiles");
+        };
+        profile;
+      };
     };
   };
 
   public query ({ caller }) func getAllPlayerProfiles() : async [PlayerProfile] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view player profiles");
+    };
     let playersArray = playerProfiles.values().toArray().sort();
     playersArray;
   };
 
-  public query func getAllPlayerProfilesByGamesPlayed() : async [PlayerProfile] {
+  public query ({ caller }) func getAllPlayerProfilesByGamesPlayed() : async [PlayerProfile] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view player profiles");
+    };
     let playersArray = playerProfiles.values().toArray().sort(PlayerProfile.compareByGamesPlayed);
     playersArray;
   };
@@ -341,6 +370,112 @@ actor {
                 { game with rounds = updatedRounds };
               };
             };
+          };
+          case (#genericGame(_)) {
+            { game with rounds = updatedRounds };
+          };
+          case (_) {
+            { game with rounds = updatedRounds };
+          };
+        };
+        gameSessions.add(gameId, updatedGame);
+      };
+    };
+  };
+
+  public shared ({ caller }) func updateRound(gameId : Nat, roundNumber : Nat, scores : [PlayerScore]) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can update rounds");
+    };
+    switch (gameSessions.get(gameId)) {
+      case (null) { Runtime.trap("Game session does not exist") };
+      case (?game) {
+        if (not isGameParticipant(game, caller) and not AccessControl.isAdmin(accessControlState, caller)) {
+          Runtime.trap("Unauthorized: Only game participants or admins can update rounds");
+        };
+        if (not game.isActive) {
+          Runtime.trap("Cannot update rounds in a completed game.");
+        };
+
+        var foundRound = false;
+        let updatedRounds = game.rounds.map(
+          func(round : Round) : Round {
+            if (round.roundNumber == roundNumber) {
+              foundRound := true;
+              {
+                roundNumber = round.roundNumber;
+                playerScores = scores;
+              };
+            } else {
+              round;
+            };
+          }
+        );
+
+        if (not foundRound) {
+          Runtime.trap("Round not found");
+        };
+
+        var gameShouldEnd = false;
+        let updatedGame = switch (game.gameType) {
+          case (#nerts(_)) {
+            switch (game.nertsWinTarget) {
+              case (?target) {
+                for (round in updatedRounds.values()) {
+                  for (score in round.playerScores.values()) {
+                    if (score.score >= target) {
+                      gameShouldEnd := true;
+                    };
+                  };
+                };
+                {
+                  id = game.id;
+                  gameType = game.gameType;
+                  players = game.players;
+                  rounds = updatedRounds;
+                  finalScores = game.finalScores;
+                  createdAt = game.createdAt;
+                  isActive = not gameShouldEnd;
+                  owner = game.owner;
+                  nertsWinTarget = game.nertsWinTarget;
+                  flip7TargetScore = game.flip7TargetScore;
+                };
+              };
+              case (null) {
+                { game with rounds = updatedRounds };
+              };
+            };
+          };
+          case (#flip7(_)) {
+            switch (game.flip7TargetScore) {
+              case (?target) {
+                for (round in updatedRounds.values()) {
+                  for (score in round.playerScores.values()) {
+                    if (score.score >= target) {
+                      gameShouldEnd := true;
+                    };
+                  };
+                };
+                {
+                  id = game.id;
+                  gameType = game.gameType;
+                  players = game.players;
+                  rounds = updatedRounds;
+                  finalScores = game.finalScores;
+                  createdAt = game.createdAt;
+                  isActive = not gameShouldEnd;
+                  owner = game.owner;
+                  nertsWinTarget = game.nertsWinTarget;
+                  flip7TargetScore = game.flip7TargetScore;
+                };
+              };
+              case (null) {
+                { game with rounds = updatedRounds };
+              };
+            };
+          };
+          case (#genericGame(_)) {
+            { game with rounds = updatedRounds };
           };
           case (_) {
             { game with rounds = updatedRounds };

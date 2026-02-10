@@ -28,6 +28,11 @@ export const NertsRules = IDL.Record({
   'rulesSummary' : IDL.Text,
   'gameEndCondition' : IDL.Text,
 });
+export const GenericGameRules = IDL.Record({
+  'scoringMethod' : ScoringMethod,
+  'rulesSummary' : IDL.Text,
+  'gameEndCondition' : IDL.Text,
+});
 export const GameType = IDL.Variant({
   'flip7' : IDL.Record({
     'targetScore' : IDL.Nat,
@@ -41,6 +46,7 @@ export const GameType = IDL.Variant({
     'gameEndCondition' : IDL.Text,
   }),
   'nerts' : NertsRules,
+  'genericGame' : GenericGameRules,
   'milleBornes' : IDL.Record({
     'scoringMethod' : ScoringMethod,
     'rulesSummary' : IDL.Text,
@@ -115,6 +121,7 @@ export const idlService = IDL.Service({
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'updateRound' : IDL.Func([IDL.Nat, IDL.Nat, IDL.Vec(PlayerScore)], [], []),
 });
 
 export const idlInitArgs = [];
@@ -137,6 +144,11 @@ export const idlFactory = ({ IDL }) => {
     'rulesSummary' : IDL.Text,
     'gameEndCondition' : IDL.Text,
   });
+  const GenericGameRules = IDL.Record({
+    'scoringMethod' : ScoringMethod,
+    'rulesSummary' : IDL.Text,
+    'gameEndCondition' : IDL.Text,
+  });
   const GameType = IDL.Variant({
     'flip7' : IDL.Record({
       'targetScore' : IDL.Nat,
@@ -150,6 +162,7 @@ export const idlFactory = ({ IDL }) => {
       'gameEndCondition' : IDL.Text,
     }),
     'nerts' : NertsRules,
+    'genericGame' : GenericGameRules,
     'milleBornes' : IDL.Record({
       'scoringMethod' : ScoringMethod,
       'rulesSummary' : IDL.Text,
@@ -224,6 +237,7 @@ export const idlFactory = ({ IDL }) => {
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'updateRound' : IDL.Func([IDL.Nat, IDL.Nat, IDL.Vec(PlayerScore)], [], []),
   });
 };
 

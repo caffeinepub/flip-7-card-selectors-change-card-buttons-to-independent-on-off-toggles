@@ -1,67 +1,95 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-09T03:26:39.551Z",
+  "generatedAt": "2026-02-10T03:53:24.417Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
+    "total": 5,
     "implemented": 4,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Update the Flip 7 score entry UI so each per-player card selection control (the grid items for 1–12, +4, +10) behaves as an on/off toggle representing whether that player has that card, rather than a button that adds repeatedly to the tally.",
+        "summary": "Add a new selectable game template named \"Generic Game\" that follows the previously described Nerts-style behavior template: one numeric score entry per player per round, totals automatically computed from entered round scores, and unlimited rounds (no win target / no automatic game end).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/scores/Flip7ScoreEntry.tsx"
+          "frontend/src/gameTemplates.ts",
+          "frontend/src/screens/GamePickerScreen.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/scores/Flip7ScoreEntry.tsx"
+          "frontend/src/gameTemplates.ts"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Ensure toggling a card ON/OFF for a player does not affect any other card’s state for that same player (no mutual exclusivity); all card toggles are independent.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/scores/Flip7ScoreEntry.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/scores/Flip7ScoreEntry.tsx"
-        ]
+        "summary": "Backend: extend the Motoko GameType model and session creation flow to support the new \"Generic Game\" game type so that authenticated sessions can be created and scored (addRound/updateRound) the same way as existing round-based games.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
         "id": "REQ-3",
-        "summary": "Visually represent each card selector’s toggle state using a clear, standard on/off style (e.g., distinct “on” styling vs “off” styling) so users can tell at a glance which cards are selected.",
+        "summary": "Frontend: update template/type plumbing to include the new Generic Game across the app (gameTemplates, route param usage, and LocalSession/RoundEntryState typing) so it is treated as a first-class game type like the existing ones.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/scores/Flip7ScoreEntry.tsx"
+          "frontend/src/gameTemplates.ts",
+          "frontend/src/lib/sessionTypes.ts",
+          "frontend/src/screens/SessionSetupScreen.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/scores/Flip7ScoreEntry.tsx"
+          "frontend/src/gameTemplates.ts",
+          "frontend/src/lib/sessionTypes.ts"
         ]
       },
       {
         "id": "REQ-4",
-        "summary": "Update Flip 7 tally and validation logic to reflect toggle selection: the “Button Tally” value must equal the sum of values of all toggles currently ON for that player; the “Clear” action must reset all card toggles to OFF for that player.",
+        "summary": "Frontend: implement a Generic Game round-entry UI component that matches the Nerts-style template behavior but uses a single numeric input per player (one number per player per round). It must validate numeric input for all players before allowing submission and then submit a Map(playerId -> number) for the round.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/scores/Flip7ScoreEntry.tsx"
+          "frontend/src/components/scores/GenericGameScoreEntry.tsx",
+          "frontend/src/lib/sessionTypes.ts"
         ],
         "matchedFiles": [
-          "frontend/src/components/scores/Flip7ScoreEntry.tsx"
+          "frontend/src/components/scores/GenericGameScoreEntry.tsx",
+          "frontend/src/lib/sessionTypes.ts"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Frontend: integrate Generic Game into the existing score sheet and round editing flows so users can add rounds and edit past rounds for Generic Game just like other round-based games.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/screens/ScoreSheetScreen.tsx",
+          "frontend/src/components/scores/EditRoundDialog.tsx",
+          "frontend/src/lib/scoring.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/screens/ScoreSheetScreen.tsx",
+          "frontend/src/components/scores/EditRoundDialog.tsx",
+          "frontend/src/lib/scoring.ts"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/components/scores/Flip7ScoreEntry.tsx",
+    "frontend/src/backend.d.ts",
+    "frontend/src/backend.ts",
+    "frontend/src/components/scores/EditRoundDialog.tsx",
+    "frontend/src/components/scores/GenericGameScoreEntry.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/gameTemplates.ts",
+    "frontend/src/lib/scoring.ts",
+    "frontend/src/lib/sessionTypes.ts",
+    "frontend/src/screens/ScoreSheetScreen.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",
