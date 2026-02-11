@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-a-new-selectable-game-template-named-generic-game-that-follows-the-previously-described-nerts-style-behavior-template-one-numeric-score-entry-per-player-per-round-totals-automatically-computed-from-entered-round-scores-and-unlimited-rounds-no-win-target-no-automatic-game-end",
-      "featureTitle": "Add a new selectable game template named \"Generic Game\" that follows the previously described Nerts-style behavior template: one numeric score entry per player per round, totals automatically computed from entered round scores, and unlimited rounds (no win target / no automatic game end).",
+      "featureId": "feature-update-the-game-end-result-model-to-support-multiple-winners-a-tie-instead-of-only-a-single-winner-and-ensure-the-scoring-utilities-can-return-all-tied-players-when-applicable",
+      "featureTitle": "Update the game-end result model to support multiple winners (a tie) instead of only a single `winner`, and ensure the scoring utilities can return all tied players when applicable.",
       "files": [
-        "frontend/src/gameTemplates.ts"
+        "frontend/src/lib/scoring.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -21,51 +21,9 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-frontend-update-template-type-plumbing-to-include-the-new-generic-game-across-the-app-gametemplates-route-param-usage-and-localsession-roundentrystate-typing-so-it-is-treated-as-a-first-class-game-type-like-the-existing-ones",
-      "featureTitle": "Frontend: update template/type plumbing to include the new Generic Game across the app (gameTemplates, route param usage, and LocalSession/RoundEntryState typing) so it is treated as a first-class game type like the existing ones.",
+      "featureId": "feature-update-the-game-over-ui-on-the-score-sheet-to-correctly-display-ties-for-first-place-if-multiple-winners-are-returned-show-all-tied-player-names-and-indicate-they-are-tied-for-first-place-with-the-winning-score",
+      "featureTitle": "Update the game-over UI on the score sheet to correctly display ties for first place: if multiple winners are returned, show all tied player names and indicate they are tied for first place with the winning score.",
       "files": [
-        "frontend/src/gameTemplates.ts",
-        "frontend/src/lib/sessionTypes.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-3"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-frontend-implement-a-generic-game-round-entry-ui-component-that-matches-the-nerts-style-template-behavior-but-uses-a-single-numeric-input-per-player-one-number-per-player-per-round-it-must-validate-numeric-input-for-all-players-before-allowing-submission-and-then-submit-a-map-playerid-number-for-the-round",
-      "featureTitle": "Frontend: implement a Generic Game round-entry UI component that matches the Nerts-style template behavior but uses a single numeric input per player (one number per player per round). It must validate numeric input for all players before allowing submission and then submit a Map(playerId -> number) for the round.",
-      "files": [
-        "frontend/src/components/scores/GenericGameScoreEntry.tsx",
-        "frontend/src/lib/sessionTypes.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-frontend-integrate-generic-game-into-the-existing-score-sheet-and-round-editing-flows-so-users-can-add-rounds-and-edit-past-rounds-for-generic-game-just-like-other-round-based-games",
-      "featureTitle": "Frontend: integrate Generic Game into the existing score sheet and round editing flows so users can add rounds and edit past rounds for Generic Game just like other round-based games.",
-      "files": [
-        "frontend/src/components/scores/EditRoundDialog.tsx",
-        "frontend/src/lib/scoring.ts",
         "frontend/src/screens/ScoreSheetScreen.tsx"
       ],
       "components": [
@@ -77,7 +35,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-5"
+        "REQ-2"
       ],
       "confidence": "high"
     }

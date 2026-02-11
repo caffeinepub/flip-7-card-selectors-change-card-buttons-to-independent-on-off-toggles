@@ -194,6 +194,27 @@ export default function ScoreSheetScreen() {
     return null;
   };
 
+  const renderGameOverMessage = () => {
+    if (gameEnd.winners.length === 1) {
+      return (
+        <p className="text-lg">
+          <span className="font-semibold">{gameEnd.winners[0].playerName}</span> wins with a score of{' '}
+          <span className="font-bold">{gameEnd.winners[0].total}</span>!
+        </p>
+      );
+    } else if (gameEnd.winners.length > 1) {
+      const winnerNames = gameEnd.winners.map(w => w.playerName).join(', ');
+      const winningScore = gameEnd.winners[0].total;
+      return (
+        <p className="text-lg">
+          <span className="font-semibold">{winnerNames}</span> tie for first place with a score of{' '}
+          <span className="font-bold">{winningScore}</span>!
+        </p>
+      );
+    }
+    return null;
+  };
+
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center justify-between">
@@ -225,10 +246,7 @@ export default function ScoreSheetScreen() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-lg">
-              <span className="font-semibold">{gameEnd.winner?.playerName}</span> wins with a score of{' '}
-              <span className="font-bold">{gameEnd.winner?.total}</span>!
-            </p>
+            {renderGameOverMessage()}
           </CardContent>
         </Card>
       )}

@@ -1,102 +1,37 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Generic Game template and Nerts-style numeric round entry",
+  "title": "Support shared first place on tied winning scores",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Add a new selectable \"Generic Game\" template that uses Nerts-style numeric round entry with auto totals and unlimited rounds.",
+      "summary": "Update scoring result types and utilities to return all tied winners when a win condition is met.",
       "acceptanceCriteria": [
-        "The home game picker shows a new card for \"Generic Game\" alongside the existing games.",
-        "Clicking \"Generic Game\" navigates to the existing setup flow at /setup/$gameType and then into the existing score sheet flow.",
-        "The game can accept additional rounds indefinitely without triggering a game-over state due to a target score."
+        "`frontend/src/lib/scoring.ts` no longer limits game-end results to a single winner when a tie occurs.",
+        "When the winning condition is met and multiple players share the winning score, the game-end result includes all tied players (not just the first one).",
+        "No TypeScript errors in callers due to the updated result type."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/gameTemplates.ts",
+          "path": "frontend/src/lib/scoring.ts",
           "operation": "modify",
-          "description": "Add the \"Generic Game\" template to GAME_TEMPLATES and expand template id typing so it can be selected from the picker and routed through /setup/$gameType."
-        },
-        {
-          "path": "frontend/src/screens/GamePickerScreen.tsx",
-          "operation": "modify",
-          "description": "Ensure the game picker rendering continues to list all GAME_TEMPLATES (including \"Generic Game\") as a selectable card and navigates using the template id."
+          "description": "Refactor the game-end result model from a single optional winner to a plural winners collection (supporting ties), and update checkGameEnd to compute the winning score then include all players tied at that score when the game-end condition is satisfied (e.g., for Nerts and Flip7). Ensure the exported types and return shapes remain consistent so downstream callers can be updated without TypeScript errors."
         }
       ]
     },
     {
-      "id": "REQ-3",
-      "summary": "Update frontend game-type plumbing and typings to treat Generic Game as a first-class game type across setup and session state.",
+      "id": "REQ-2",
+      "summary": "Update the ScoreSheet game-over banner to display either a single winner or a tie for first with all tied names and the winning score.",
       "acceptanceCriteria": [
-        "frontend/src/gameTemplates.ts includes a new template entry for Generic Game with its own id, name, rulesSummary, gameEndCondition, scoringMethod, icon, and minPlayers/maxPlayers.",
-        "createGameType(...) and getGameTemplate(...) support the new Generic Game template id.",
-        "frontend/src/lib/sessionTypes.ts includes Generic Game in the LocalSession.gameType union and RoundEntryState union (with an entry state type appropriate for numeric entry).",
-        "SessionSetupScreen can start both profile-based and quick sessions for Generic Game without type errors or runtime errors."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/gameTemplates.ts",
-          "operation": "modify",
-          "description": "Extend GameTemplate id union, GAME_TEMPLATES, createGameType(...), and getGameTemplate(...) to support the backend GameType variant for \"genericGame\"."
-        },
-        {
-          "path": "frontend/src/lib/sessionTypes.ts",
-          "operation": "modify",
-          "description": "Add a Generic Game entry-state type for single numeric entry per player, include it in RoundEntryState, and include 'genericGame' in LocalSession.gameType."
-        },
-        {
-          "path": "frontend/src/screens/SessionSetupScreen.tsx",
-          "operation": "modify",
-          "description": "Ensure setup flow can start profile-based and quick sessions for the new template id without relying on nerts/flip7-only win target state."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Implement a Generic Game round-entry UI with one numeric input per player, full validation, and submission of Map(playerId -> number).",
-      "acceptanceCriteria": [
-        "A new score entry component exists for Generic Game (similar integration level to NertsScoreEntry/SkyjoScoreEntry/etc.).",
-        "The round-entry UI displays each player with exactly one numeric input for the round score.",
-        "Submitting a round is blocked with a clear English error message if any player has an invalid/missing number.",
-        "On successful submit, the ScoreSheet adds a new round and the standings/totals update accordingly."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/scores/GenericGameScoreEntry.tsx",
-          "operation": "create",
-          "description": "Create a new GenericGameScoreEntry component modeled after existing numeric-entry components (e.g., SkyjoScoreEntry): render one numeric input per player, validate all inputs, show a clear English validation error, and on submit call onSubmit(scoresMap, entryState) where scoresMap is Map<string, number>."
-        },
-        {
-          "path": "frontend/src/lib/sessionTypes.ts",
-          "operation": "modify",
-          "description": "Add/confirm a GenericGameEntryState type used by GenericGameScoreEntry (e.g., playerScores: Map<string, number>) so round editing can rehydrate prior inputs."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Integrate Generic Game into score sheet add-round, edit-round, round history display, and ensure no automatic game end.",
-      "acceptanceCriteria": [
-        "frontend/src/screens/ScoreSheetScreen.tsx renders the Generic Game score entry component when the current session gameType is Generic Game.",
-        "frontend/src/components/scores/EditRoundDialog.tsx supports editing Generic Game rounds using the same Generic Game score entry component and confirmation flow.",
-        "Round History table continues to work and displays Generic Game round scores correctly.",
-        "checkGameEnd(...) does not end Generic Game sessions automatically."
+        "In `frontend/src/screens/ScoreSheetScreen.tsx`, when the game is ended and multiple winners exist, the UI renders messaging that indicates a tie for first place (in English).",
+        "When exactly one winner exists, the UI continues to show the existing single-winner message.",
+        "The standings list remains unchanged and continues to render all players and totals."
       ],
       "file_operations": [
         {
           "path": "frontend/src/screens/ScoreSheetScreen.tsx",
           "operation": "modify",
-          "description": "Wire GenericGameScoreEntry into the add-round UI rendering when localSession.gameType is 'genericGame', and extend the handleAddRound switch to record a typed RoundEntryState for 'genericGame'."
-        },
-        {
-          "path": "frontend/src/components/scores/EditRoundDialog.tsx",
-          "operation": "modify",
-          "description": "Add Generic Game support: include 'genericGame' in the gameType prop union, extend the typed entry-state switch, add an initial-state getter for Generic Game, and render GenericGameScoreEntry in the dialog body."
-        },
-        {
-          "path": "frontend/src/lib/scoring.ts",
-          "operation": "modify",
-          "description": "Extend getStandings(...) and checkGameEnd(...) typing to include 'genericGame' and ensure checkGameEnd(...) always returns isEnded: false for Generic Game (no win target / no automatic end)."
+          "description": "Update the game-over UI logic to consume the new plural winners result from checkGameEnd. When winners.length > 1, render English tie-for-first messaging that lists all tied player names and shows the shared winning score; when winners.length === 1, keep the existing single-winner phrasing. Do not change the standings rendering."
         }
       ]
     }

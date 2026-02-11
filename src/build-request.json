@@ -1,115 +1,65 @@
 {
   "kind": "build_request",
-  "title": "Add new Generic Game scorecard using Nerts-style numeric round entry",
+  "title": "Support shared first place when winners tie on score",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Add a new selectable game template named \"Generic Game\" that follows the previously described Nerts-style behavior template: one numeric score entry per player per round, totals automatically computed from entered round scores, and unlimited rounds (no win target / no automatic game end).",
-      "target": "both",
+      "text": "Update the game-end result model to support multiple winners (a tie) instead of only a single `winner`, and ensure the scoring utilities can return all tied players when applicable.",
+      "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-last"
         ],
         "quotes": [
-          "use the previously described \"Nerts‑style\" behavior (numeric entries, auto totals, unlimited rounds) as the template"
+          "If there is a tie for Lois score then the players tie for first place"
         ]
       },
       "acceptanceCriteria": [
-        "The home game picker shows a new card for \"Generic Game\" alongside the existing games.",
-        "Clicking \"Generic Game\" navigates to the existing setup flow at /setup/$gameType and then into the existing score sheet flow.",
-        "The game can accept additional rounds indefinitely without triggering a game-over state due to a target score."
+        "`frontend/src/lib/scoring.ts` no longer limits game-end results to a single winner when a tie occurs.",
+        "When the winning condition is met and multiple players share the winning score, the game-end result includes all tied players (not just the first one).",
+        "No TypeScript errors in callers due to the updated result type."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Backend: extend the Motoko GameType model and session creation flow to support the new \"Generic Game\" game type so that authenticated sessions can be created and scored (addRound/updateRound) the same way as existing round-based games.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "numeric entries, auto totals, unlimited rounds"
-        ]
-      },
-      "acceptanceCriteria": [
-        "backend/main.mo GameType includes a new variant for the Generic Game.",
-        "createGameSession accepts the new game type without trapping.",
-        "addRound and updateRound succeed for Generic Game sessions and do not apply Nerts/Flip7 win-target ending logic to Generic Game sessions.",
-        "Existing game types (skyjo, milleBornes, nerts, flip7) continue to work unchanged."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Frontend: update template/type plumbing to include the new Generic Game across the app (gameTemplates, route param usage, and LocalSession/RoundEntryState typing) so it is treated as a first-class game type like the existing ones.",
+      "text": "Update the game-over UI on the score sheet to correctly display ties for first place: if multiple winners are returned, show all tied player names and indicate they are tied for first place with the winning score.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-last"
         ],
         "quotes": [
-          "Use ... as the template"
+          "If there is a tie for Lois score then the players tie for first place"
         ]
       },
       "acceptanceCriteria": [
-        "frontend/src/gameTemplates.ts includes a new template entry for Generic Game with its own id, name, rulesSummary, gameEndCondition, scoringMethod, icon, and minPlayers/maxPlayers.",
-        "createGameType(...) and getGameTemplate(...) support the new Generic Game template id.",
-        "frontend/src/lib/sessionTypes.ts includes Generic Game in the LocalSession.gameType union and RoundEntryState union (with an entry state type appropriate for numeric entry).",
-        "SessionSetupScreen can start both profile-based and quick sessions for Generic Game without type errors or runtime errors."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Frontend: implement a Generic Game round-entry UI component that matches the Nerts-style template behavior but uses a single numeric input per player (one number per player per round). It must validate numeric input for all players before allowing submission and then submit a Map(playerId -> number) for the round.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "numeric entries, auto totals, unlimited rounds"
-        ]
-      },
-      "acceptanceCriteria": [
-        "A new score entry component exists for Generic Game (similar integration level to NertsScoreEntry/SkyjoScoreEntry/etc.).",
-        "The round-entry UI displays each player with exactly one numeric input for the round score.",
-        "Submitting a round is blocked with a clear English error message if any player has an invalid/missing number.",
-        "On successful submit, the ScoreSheet adds a new round and the standings/totals update accordingly."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Frontend: integrate Generic Game into the existing score sheet and round editing flows so users can add rounds and edit past rounds for Generic Game just like other round-based games.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "unlimited rounds"
-        ]
-      },
-      "acceptanceCriteria": [
-        "frontend/src/screens/ScoreSheetScreen.tsx renders the Generic Game score entry component when the current session gameType is Generic Game.",
-        "frontend/src/components/scores/EditRoundDialog.tsx supports editing Generic Game rounds using the same Generic Game score entry component and confirmation flow.",
-        "Round History table continues to work and displays Generic Game round scores correctly.",
-        "checkGameEnd(...) does not end Generic Game sessions automatically."
+        "In `frontend/src/screens/ScoreSheetScreen.tsx`, when the game is ended and multiple winners exist, the UI renders messaging that indicates a tie for first place (in English).",
+        "When exactly one winner exists, the UI continues to show the existing single-winner message.",
+        "The standings list remains unchanged and continues to render all players and totals."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor in backend/main.mo; only add a migration file if existing stable state requires it.",
-    "Do not edit files under frontend/src/components/ui or other immutablePaths listed in SYSTEM_CONTEXT.",
-    "Use English for all user-facing UI text."
+    "Do not edit files under `frontend/src/components/ui` (read-only UI component sources).",
+    "Keep changes within the existing React + TypeScript + React Query + Tailwind stack; no new backend services."
   ],
   "nonGoals": [
-    "Do not implement Nerts itself beyond what already exists in the project.",
-    "Do not add third-party auth providers or external databases.",
-    "Do not add real-time/multiplayer synchronization; this is a local/session-based scorekeeping flow."
+    "Implementing Phase 10 scoring, phase tracking, or end-of-game logic (only tie-handling behavior for winners is in scope for this request).",
+    "Adding game history storage or persistence changes."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

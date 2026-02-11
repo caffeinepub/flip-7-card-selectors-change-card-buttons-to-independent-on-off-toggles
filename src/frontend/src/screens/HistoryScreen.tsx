@@ -66,7 +66,7 @@ export default function HistoryScreen() {
 
             return (
               <Card key={session.id.toString()} className="hover:shadow-md transition-shadow">
-                <CardHeader>
+                <CardHeader className="py-4">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1 flex-1">
                       <CardTitle className="flex items-center gap-2">

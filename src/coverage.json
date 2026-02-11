@@ -1,94 +1,45 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T03:53:24.417Z",
+  "generatedAt": "2026-02-11T23:18:44.923Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 5,
-    "implemented": 4,
+    "total": 2,
+    "implemented": 2,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Add a new selectable game template named \"Generic Game\" that follows the previously described Nerts-style behavior template: one numeric score entry per player per round, totals automatically computed from entered round scores, and unlimited rounds (no win target / no automatic game end).",
+        "summary": "Update the game-end result model to support multiple winners (a tie) instead of only a single `winner`, and ensure the scoring utilities can return all tied players when applicable.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/gameTemplates.ts",
-          "frontend/src/screens/GamePickerScreen.tsx"
+          "frontend/src/lib/scoring.ts"
         ],
         "matchedFiles": [
-          "frontend/src/gameTemplates.ts"
+          "frontend/src/lib/scoring.ts"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Backend: extend the Motoko GameType model and session creation flow to support the new \"Generic Game\" game type so that authenticated sessions can be created and scored (addRound/updateRound) the same way as existing round-based games.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Frontend: update template/type plumbing to include the new Generic Game across the app (gameTemplates, route param usage, and LocalSession/RoundEntryState typing) so it is treated as a first-class game type like the existing ones.",
+        "summary": "Update the game-over UI on the score sheet to correctly display ties for first place: if multiple winners are returned, show all tied player names and indicate they are tied for first place with the winning score.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/gameTemplates.ts",
-          "frontend/src/lib/sessionTypes.ts",
-          "frontend/src/screens/SessionSetupScreen.tsx"
+          "frontend/src/screens/ScoreSheetScreen.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/gameTemplates.ts",
-          "frontend/src/lib/sessionTypes.ts"
-        ]
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Frontend: implement a Generic Game round-entry UI component that matches the Nerts-style template behavior but uses a single numeric input per player (one number per player per round). It must validate numeric input for all players before allowing submission and then submit a Map(playerId -> number) for the round.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/scores/GenericGameScoreEntry.tsx",
-          "frontend/src/lib/sessionTypes.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/scores/GenericGameScoreEntry.tsx",
-          "frontend/src/lib/sessionTypes.ts"
-        ]
-      },
-      {
-        "id": "REQ-5",
-        "summary": "Frontend: integrate Generic Game into the existing score sheet and round editing flows so users can add rounds and edit past rounds for Generic Game just like other round-based games.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/screens/ScoreSheetScreen.tsx",
-          "frontend/src/components/scores/EditRoundDialog.tsx",
-          "frontend/src/lib/scoring.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/screens/ScoreSheetScreen.tsx",
-          "frontend/src/components/scores/EditRoundDialog.tsx",
-          "frontend/src/lib/scoring.ts"
+          "frontend/src/screens/ScoreSheetScreen.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/components/scores/EditRoundDialog.tsx",
-    "frontend/src/components/scores/GenericGameScoreEntry.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
-    "frontend/src/gameTemplates.ts",
     "frontend/src/lib/scoring.ts",
-    "frontend/src/lib/sessionTypes.ts",
     "frontend/src/screens/ScoreSheetScreen.tsx",
     "project_state.json",
     "scratch/component-selection.json",

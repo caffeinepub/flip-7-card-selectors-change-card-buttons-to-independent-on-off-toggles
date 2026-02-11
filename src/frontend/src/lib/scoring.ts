@@ -8,7 +8,7 @@ export interface PlayerStanding {
 
 export interface GameEndResult {
   isEnded: boolean;
-  winner?: PlayerStanding;
+  winners: PlayerStanding[];
 }
 
 export function getStandings(
@@ -59,17 +59,21 @@ export function checkGameEnd(
     const sortedByTotal = [...standings].sort((a, b) => b.total - a.total);
     const topPlayer = sortedByTotal[0];
     if (topPlayer && topPlayer.total >= target) {
-      return { isEnded: true, winner: topPlayer };
+      const winningScore = topPlayer.total;
+      const allWinners = sortedByTotal.filter(p => p.total === winningScore);
+      return { isEnded: true, winners: allWinners };
     }
   } else if (gameType === 'flip7') {
     const target = flip7TargetScore || 100;
     const topPlayer = standings[0];
     if (topPlayer && topPlayer.total >= target) {
-      return { isEnded: true, winner: topPlayer };
+      const winningScore = topPlayer.total;
+      const allWinners = standings.filter(p => p.total === winningScore);
+      return { isEnded: true, winners: allWinners };
     }
   } else if (gameType === 'genericGame') {
-    return { isEnded: false };
+    return { isEnded: false, winners: [] };
   }
 
-  return { isEnded: false };
+  return { isEnded: false, winners: [] };
 }

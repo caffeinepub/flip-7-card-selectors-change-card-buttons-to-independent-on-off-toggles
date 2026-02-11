@@ -10,8 +10,9 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Checkbox } from '../components/ui/checkbox';
-import { Plus, X, Users } from 'lucide-react';
+import { Plus, X, Users, BookOpen } from 'lucide-react';
 import { Separator } from '../components/ui/separator';
+import GameRulesDialog from '../components/rules/GameRulesDialog';
 import type { SessionPlayer, QuickPlayer } from '../lib/sessionTypes';
 
 export default function SessionSetupScreen() {
@@ -29,6 +30,7 @@ export default function SessionSetupScreen() {
   const [newQuickName, setNewQuickName] = useState('');
   const [nertsWinTarget, setNertsWinTarget] = useState('200');
   const [flip7TargetScore, setFlip7TargetScore] = useState('100');
+  const [rulesDialogOpen, setRulesDialogOpen] = useState(false);
 
   const template = GAME_TEMPLATES[gameType];
 
@@ -142,13 +144,22 @@ export default function SessionSetupScreen() {
         </Button>
         <div className="flex items-center gap-3">
           <span className="text-4xl">{template.icon}</span>
-          <div>
+          <div className="flex-1">
             <h1 className="text-3xl font-semibold tracking-tight">{template.name}</h1>
             <p className="text-sm text-muted-foreground">
               {template.minPlayers}-{template.maxPlayers} players
             </p>
           </div>
         </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setRulesDialogOpen(true)}
+          className="mt-2"
+        >
+          <BookOpen className="h-4 w-4 mr-2" />
+          {rulesDialogOpen ? 'Hide Rules' : 'Show Rules'}
+        </Button>
       </div>
 
       <Separator />
@@ -352,6 +363,8 @@ export default function SessionSetupScreen() {
           </div>
         </CardContent>
       </Card>
+
+      <GameRulesDialog open={rulesDialogOpen} onOpenChange={setRulesDialogOpen} template={template} />
     </div>
   );
 }

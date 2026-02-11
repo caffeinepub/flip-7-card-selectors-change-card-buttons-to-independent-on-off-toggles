@@ -1,44 +1,31 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Scorecard app: add a new selectable game/scorecard (“Generic Game” / “Generic Scorecard”) based on Nerts-style scoring (numeric entry per player per round, auto-updating totals, unlimited rounds) using the existing player-selection approach.",
+  "summary": "Build a Phase 10 game scorecard app supporting up to 10 players with manual per-round score entry, phased yes/no tracking, automatic phase advancement, phase-requirements pop-up per player's next phase, and game-end logic when someone completes Phase 10 (lowest score wins; ties share first place).",
   "architectural_notes": [
-    "Implement a reusable Nerts-style scorecard template: per-player numeric entry per round, auto-tally totals, unlimited rounds; new game can be created by duplicating this template and renaming."
+    "Score entry is manual (no card-by-card scoring); each round records score + phased boolean per player.",
+    "Phase progression is automatic and strictly ordered; advance only when phased=true for that round.",
+    "Game ends at end of a round once any player completes Phase 10; if multiple complete Phase 10 that round, winner still based on lowest total score.",
+    "End-of-game view shows final total scores and final phase per player only (no round list).",
+    "Ties for lowest total score are allowed; declare all tied players as winners.",
+    "Phase requirements are displayed via a pop-up for the current player's next phase only."
   ],
-  "known_issues": [
-    "Builder/domain slug validation error encountered: name must be 5–50 characters and only letters, numbers, and hyphens (affected \"add-new-selectable-game-type:-generic-scorecard-(\")."
-  ],
+  "known_issues": [],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-add-a-new-selectable-game-template-named-generic-game-that-follows-the-previously-described-nerts-style-behavior-template-one-numeric-score-entry-per-player-per-round-totals-automatically-computed-from-entered-round-scores-and-unlimited-rounds-no-win-target-no-automatic-game-end",
-      "title": "Add a new selectable game template named \"Generic Game\" that follows the previously described Nerts-style behavior template: one numeric score entry per player per round, totals automatically computed from entered round scores, and unlimited rounds (no win target / no automatic game end).",
+      "id": "feature-update-the-game-end-result-model-to-support-multiple-winners-a-tie-instead-of-only-a-single-winner-and-ensure-the-scoring-utilities-can-return-all-tied-players-when-applicable",
+      "title": "Update the game-end result model to support multiple winners (a tie) instead of only a single `winner`, and ensure the scoring utilities can return all tied players when applicable.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-frontend-update-template-type-plumbing-to-include-the-new-generic-game-across-the-app-gametemplates-route-param-usage-and-localsession-roundentrystate-typing-so-it-is-treated-as-a-first-class-game-type-like-the-existing-ones",
-      "title": "Frontend: update template/type plumbing to include the new Generic Game across the app (gameTemplates, route param usage, and LocalSession/RoundEntryState typing) so it is treated as a first-class game type like the existing ones.",
+      "id": "feature-update-the-game-over-ui-on-the-score-sheet-to-correctly-display-ties-for-first-place-if-multiple-winners-are-returned-show-all-tied-player-names-and-indicate-they-are-tied-for-first-place-with-the-winning-score",
+      "title": "Update the game-over UI on the score sheet to correctly display ties for first place: if multiple winners are returned, show all tied player names and indicate they are tied for first place with the winning score.",
       "reqIds": [
-        "REQ-3"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-frontend-implement-a-generic-game-round-entry-ui-component-that-matches-the-nerts-style-template-behavior-but-uses-a-single-numeric-input-per-player-one-number-per-player-per-round-it-must-validate-numeric-input-for-all-players-before-allowing-submission-and-then-submit-a-map-playerid-number-for-the-round",
-      "title": "Frontend: implement a Generic Game round-entry UI component that matches the Nerts-style template behavior but uses a single numeric input per player (one number per player per round). It must validate numeric input for all players before allowing submission and then submit a Map(playerId -> number) for the round.",
-      "reqIds": [
-        "REQ-4"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-frontend-integrate-generic-game-into-the-existing-score-sheet-and-round-editing-flows-so-users-can-add-rounds-and-edit-past-rounds-for-generic-game-just-like-other-round-based-games",
-      "title": "Frontend: integrate Generic Game into the existing score sheet and round editing flows so users can add rounds and edit past rounds for Generic Game just like other round-based games.",
-      "reqIds": [
-        "REQ-5"
+        "REQ-2"
       ],
       "version": 1
     }
@@ -46,20 +33,43 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Add new selectable game/scorecard (Generic Game/Generic Scorecard) with Nerts-style scoring: per-player numeric entry each round, auto-updating totals, unlimited rounds, and players added via the same player-selection flow as other games.",
+      "summary": "Phase 10 scorecard: support up to 10 players (add/manage players)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Round-by-round entry: manually enter each player's score and phased (yes/no) per round",
       "reqIds": [],
       "status": "pending"
     },
     {
       "id": "AR-3",
-      "summary": "Backend: extend the Motoko GameType model and session creation flow to support the new \"Generic Game\" game type so that authenticated sessions can be created and scored (addRound/updateRound) the same way as existing round-based games.",
-      "reqIds": [
-        "REQ-2"
-      ],
+      "summary": "Automatic phase tracking: advance a player to the next phase when marked as phased for the round (phases advance strictly in order)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Game end: end at end of round when any player completes Phase 10; show final scores and final phases only",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Winner determination: lowest total score wins; if tie for lowest, all tied players share first place",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Phase requirements UI: show current player's next phase requirements in a pop-up (similar to rules pop-up)",
+      "reqIds": [],
       "status": "pending"
     }
   ],
-  "projectName": "Add new Generic Game scorecard using Nerts-style numeric round entry",
+  "gameProjectType": "none",
+  "projectName": "Support shared first place when winners tie on score",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

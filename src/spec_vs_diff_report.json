@@ -1,61 +1,23 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-10T03:53:24.414Z",
-  "summary": "Diff adds a new Generic Game template and score-entry component, extends frontend typing/scoring for the new game type, and updates backend GameType plus introduces an upgrade migration hook. However, the diff evidence does not show the home game picker or session setup flow being updated to let users select/start Generic Game, and backend round-handling logic for Generic Game is not evidenced in the truncated backend diff.",
+  "generatedAt": "2026-02-11T23:18:44.921Z",
+  "summary": "REQ-1 appears implemented in scoring utilities by changing the game-end result shape to `winners: PlayerStanding[]` and returning all tied players for Nerts and Flip 7 when the win target is met. REQ-2 (ScoreSheetScreen game-over UI tie messaging) cannot be confirmed from the provided truncated diff snippet; there is no visible evidence of updated UI copy/logic handling multiple winners.",
   "missing_requirements": [
     {
-      "id": "REQ-1",
-      "requirement": "Home game picker shows a new selectable card for \"Generic Game\" and clicking it navigates through the existing setup flow (/setup/$gameType) into the score sheet flow.",
-      "reason": "The diff summary for GamePickerScreen explicitly lists only Skyjo, Mille Bornes, and Nerts cards; no evidence of a new Generic Game card or navigation entry.",
-      "evidence": [
-        "frontend-file-summaries.txt (frontend/src/screens/GamePickerScreen.tsx description)"
-      ]
-    },
-    {
       "id": "REQ-2",
-      "requirement": "Backend addRound/updateRound succeed for Generic Game sessions and do not apply Nerts/Flip7 win-target ending logic; createGameSession accepts Generic Game without trapping; existing game types continue unchanged.",
-      "reason": "backend/main.mo is truncated and only shows GameType/rules additions and migration wiring; there is no diff evidence showing createGameSession/addRound/updateRound branching updated for #genericGame or win-target logic exclusions.",
+      "requirement": "Update the game-over UI on the score sheet to correctly display ties for first place: if multiple winners are returned, show all tied player names and indicate they are tied for first place with the winning score.",
+      "reason": "The provided `ScoreSheetScreen.tsx` diff is truncated and does not show any game-over UI rendering logic that formats/prints multiple winner names or a tie-for-first message. The snippet only shows `checkGameEnd(...)` being called.",
       "evidence": [
-        "backend/main.mo (truncated in diff summary)"
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "requirement": "SessionSetupScreen can start both profile-based and quick sessions for Generic Game without type errors or runtime errors.",
-      "reason": "The diff summary mentions SessionSetupScreen changes only for Nerts-specific and Flip7-specific target controls; no evidence of Generic Game being added to the setup screen options/flow.",
-      "evidence": [
-        "frontend-file-summaries.txt (frontend/src/screens/SessionSetupScreen.tsx description)"
+        "frontend/src/screens/ScoreSheetScreen.tsx (truncated)"
       ]
     }
   ],
-  "hallucinated_features": [
-    {
-      "description": "Introduced an explicit backend upgrade migration module and wired actor upgrade migration hook.",
-      "reason": "A migration was added and used, but the request only allowed adding a migration if existing stable state requires it; the diff does not provide evidence that stable state required a migration (and the migration code shown appears to map old game sessions through without transforming old GameType into the new one).",
-      "evidence": [
-        "backend/migration.mo",
-        "backend/main.mo (imports Migration and uses `(with migration = Migration.run) actor`)"
-      ]
-    },
-    {
-      "description": "Changed standings behavior so Flip 7 is treated as higher-is-better (descending sort).",
-      "reason": "BuildRequest did not ask to modify Flip 7 standings logic; it focused on adding Generic Game. The diff explicitly implements special sorting for flip7 in getStandings.",
-      "evidence": [
-        "frontend/src/lib/scoring.ts"
-      ]
-    }
-  ],
-  "confidence": 0.68,
+  "hallucinated_features": [],
+  "confidence": 0.62,
   "changed_files": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/scores/EditRoundDialog.tsx",
-    "frontend/src/components/scores/GenericGameScoreEntry.tsx",
-    "frontend/src/gameTemplates.ts",
     "frontend/src/lib/scoring.ts",
-    "frontend/src/lib/sessionTypes.ts",
     "frontend/src/screens/ScoreSheetScreen.tsx",
     "project_state.json"
   ]

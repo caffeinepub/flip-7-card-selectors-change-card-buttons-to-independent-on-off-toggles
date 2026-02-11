@@ -6,13 +6,13 @@ import Nat "mo:core/Nat";
 import Order "mo:core/Order";
 import Principal "mo:core/Principal";
 import Runtime "mo:core/Runtime";
-import Migration "migration";
+
 
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
 // Migrate the actor state on upgrade
-(with migration = Migration.run)
+
 actor {
   type GameType = {
     #skyjo : {
