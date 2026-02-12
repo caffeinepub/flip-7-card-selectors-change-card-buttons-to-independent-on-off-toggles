@@ -7,6 +7,7 @@ export interface SessionPlayer {
   id: bigint | string;
   name: string;
   isQuick: boolean;
+  ownerPrincipal?: string;
 }
 
 // Per-game entry state types
@@ -32,21 +33,27 @@ export interface NertsEntryState {
 }
 
 export interface Flip7EntryState {
-  selectedCards: Map<string, number[]>; // player -> array of selected card values
-  modifiers: Map<string, number[]>; // player -> array of modifier values (+4, +10)
-  multipliers: Map<string, boolean>; // player -> x2 toggle
-  manualScores: Map<string, number | null>; // player -> manual score or null
+  selectedCards: Map<string, number[]>;
+  modifiers: Map<string, number[]>;
+  multipliers: Map<string, boolean>;
+  manualScores: Map<string, number | null>;
 }
 
 export interface GenericGameEntryState {
   playerScores: Map<string, number>;
 }
 
-export type RoundEntryState = 
+export interface Phase10EntryState {
+  playerScores: Map<string, number>;
+  phaseCompletions: Map<string, boolean>;
+}
+
+export type RoundEntryState =
   | { type: 'skyjo'; state: SkyjoEntryState }
   | { type: 'milleBornes'; state: MilleBornesEntryState }
   | { type: 'nerts'; state: NertsEntryState }
   | { type: 'flip7'; state: Flip7EntryState }
+  | { type: 'phase10'; state: Phase10EntryState }
   | { type: 'genericGame'; state: GenericGameEntryState };
 
 export interface LocalRound {
@@ -55,12 +62,16 @@ export interface LocalRound {
   entryState?: RoundEntryState;
 }
 
+export type GameType = 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'phase10' | 'genericGame';
+
 export interface LocalSession {
-  gameType: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'genericGame';
+  gameType: GameType;
   players: SessionPlayer[];
   rounds: LocalRound[];
   isQuick: boolean;
   savedSessionId?: bigint;
   nertsWinTarget?: number;
   flip7TargetScore?: number;
+  phase10WinTarget?: number;
+  phase10Progress?: Map<string, number>;
 }

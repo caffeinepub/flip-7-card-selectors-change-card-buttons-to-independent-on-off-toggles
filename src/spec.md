@@ -1,10 +1,12 @@
 # Specification
 
 ## Summary
-**Goal:** Support shared first place when multiple players tie on the winning score at game end.
+**Goal:** Update the Phase 10 round submission UI so the “Phase complete” checkbox is always visible, defaults to unchecked for new rounds, and is right-aligned on the same row as the score input.
 
 **Planned changes:**
-- Update the game-end result type and scoring utilities (`frontend/src/lib/scoring.ts`) to return multiple winners when the top score is tied.
-- Update the game-over messaging in `frontend/src/screens/ScoreSheetScreen.tsx` to display a “tied for first place” message listing all tied winners and the winning score, while keeping the single-winner message unchanged.
+- In Phase10ScoreEntry, render the “Phase complete” checkbox + label for each player row by default (no extra tap/click to reveal).
+- Ensure the checkbox is unchecked by default when entering a new round (no initialState), while respecting saved values when editing an existing round (initialState present).
+- Adjust the per-player row layout so the score input and “Phase complete” control sit on the same horizontal line, with the checkbox/label right-justified and responsive on narrow/mobile widths.
+- Preserve existing checkbox disable/enable rules (e.g., ownership/submitting state) and keep Phase 10 progression behavior unchanged (UI-only).
 
-**User-visible outcome:** When a game ends with a tie for the highest score, the score sheet shows all tied players as shared first place (with the winning score); otherwise it continues to show the single winner as before.
+**User-visible outcome:** On the Phase 10 round submission screen, each player’s score entry shows an always-visible “Phase complete” checkbox aligned to the right of the score input; it starts unchecked for new rounds and correctly reflects saved state when editing.

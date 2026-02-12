@@ -35,7 +35,7 @@ export default function Flip7ScoreEntry({ players, onSubmit, initialState }: Fli
     const initial = new Map<string, string>();
     if (initialState) {
       initialState.manualScores.forEach((val, playerId) => {
-        if (val !== null) {
+        if (val !== null && val !== undefined) {
           initial.set(playerId, val.toString());
         }
       });

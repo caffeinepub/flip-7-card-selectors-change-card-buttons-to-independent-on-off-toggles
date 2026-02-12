@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router';
-import { useGetGameSession, useAddRound, useUpdateRound } from '../hooks/useGameSessions';
+import { useGetGameSession, useAddRound, useUpdateRound, useSubmitPhase10Round } from '../hooks/useGameSessions';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { getGameTemplate } from '../gameTemplates';
 import { getStandings, checkGameEnd } from '../lib/scoring';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
@@ -12,26 +13,31 @@ import MilleBornesScoreEntry from '../components/scores/MilleBornesScoreEntry';
 import NertsScoreEntry from '../components/scores/NertsScoreEntry';
 import Flip7ScoreEntry from '../components/scores/Flip7ScoreEntry';
 import GenericGameScoreEntry from '../components/scores/GenericGameScoreEntry';
+import Phase10ScoreEntry from '../components/scores/Phase10ScoreEntry';
 import RoundsTable from '../components/scores/RoundsTable';
 import EditRoundDialog from '../components/scores/EditRoundDialog';
 import type { LocalSession, LocalRound, RoundEntryState } from '../lib/sessionTypes';
+import { toast } from 'sonner';
 
 export default function ScoreSheetScreen() {
   const { sessionId } = useParams({ from: '/game/$sessionId' });
   const navigate = useNavigate();
   const location = useLocation();
   const isQuickSession = sessionId === 'quick';
+  const { identity } = useInternetIdentity();
 
   const { data: savedSession, isLoading: sessionLoading } = useGetGameSession(
     isQuickSession ? null : BigInt(sessionId)
   );
   const addRound = useAddRound();
   const updateRound = useUpdateRound();
+  const submitPhase10Round = useSubmitPhase10Round();
 
   const [localSession, setLocalSession] = useState<LocalSession | null>(null);
   const [isAddingRound, setIsAddingRound] = useState(false);
   const [editingRound, setEditingRound] = useState<LocalRound | null>(null);
   const [resetNonce, setResetNonce] = useState(0);
+  const [isSubmittingRound, setIsSubmittingRound] = useState(false);
 
   useEffect(() => {
     if (isQuickSession) {
@@ -44,6 +50,7 @@ export default function ScoreSheetScreen() {
         id: p.id,
         name: p.name,
         isQuick: false,
+        ownerPrincipal: p.owner.toString(),
       }));
 
       const rounds: LocalRound[] = savedSession.rounds.map((r) => {
@@ -60,6 +67,17 @@ export default function ScoreSheetScreen() {
       const gameTypeStr = savedSession.gameType.__kind__;
       const nertsWinTarget = savedSession.nertsWinTarget ? Number(savedSession.nertsWinTarget) : undefined;
       const flip7TargetScore = savedSession.flip7TargetScore ? Number(savedSession.flip7TargetScore) : undefined;
+      const phase10WinTarget = savedSession.phase10WinTarget ? Number(savedSession.phase10WinTarget) : undefined;
+
+      // Extract phase10Progress and clamp to 1-10
+      const phase10Progress = savedSession.phase10Progress
+        ? new Map(
+            savedSession.phase10Progress.map((p) => [
+              p.playerId.toString(),
+              Math.max(1, Math.min(10, Number(p.currentPhase))),
+            ])
+          )
+        : undefined;
 
       setLocalSession({
         gameType: gameTypeStr as any,
@@ -69,6 +87,8 @@ export default function ScoreSheetScreen() {
         savedSessionId: savedSession.id,
         nertsWinTarget,
         flip7TargetScore,
+        phase10WinTarget,
+        phase10Progress,
       });
     }
   }, [isQuickSession, savedSession, location.state]);
@@ -89,7 +109,7 @@ export default function ScoreSheetScreen() {
 
   const template = getGameTemplate({ __kind__: localSession.gameType } as any);
   const standings = getStandings(localSession.rounds, localSession.players, localSession.gameType);
-  const gameEnd = checkGameEnd(standings, localSession.gameType, localSession.nertsWinTarget, localSession.flip7TargetScore);
+  const gameEnd = checkGameEnd(standings, localSession.gameType, localSession.nertsWinTarget, localSession.flip7TargetScore, localSession.phase10WinTarget);
 
   const handleAddRound = async (scores: Map<string, number>, entryState?: RoundEntryState) => {
     const roundNumber = localSession.rounds.length + 1;
@@ -114,6 +134,73 @@ export default function ScoreSheetScreen() {
         roundNumber: BigInt(roundNumber),
         scores: playerScores,
       });
+    }
+  };
+
+  const handleAddPhase10Round = async (scores: Map<string, number>, entryState: RoundEntryState) => {
+    if (entryState.type !== 'phase10') return;
+
+    const roundNumber = localSession.rounds.length + 1;
+    const newRound: LocalRound = {
+      roundNumber,
+      scores,
+      entryState,
+    };
+
+    setIsSubmittingRound(true);
+
+    try {
+      if (!isQuickSession && localSession.savedSessionId) {
+        const playerScores = Array.from(scores.entries()).map(([playerId, score]) => ({
+          playerId: BigInt(playerId),
+          score: BigInt(score),
+        }));
+
+        const phaseCompletions = Array.from(entryState.state.phaseCompletions.entries()).map(
+          ([playerId, completed]) => ({
+            playerId: BigInt(playerId),
+            completed,
+          })
+        );
+
+        await submitPhase10Round.mutateAsync({
+          gameId: localSession.savedSessionId,
+          roundNumber: BigInt(roundNumber),
+          scores: playerScores,
+          phaseCompletions,
+        });
+
+        // Compute new phase progress locally for immediate UI update
+        const updatedProgress = new Map(localSession.phase10Progress || new Map());
+        entryState.state.phaseCompletions.forEach((completed, playerId) => {
+          if (completed) {
+            const currentPhase = updatedProgress.get(playerId) || 1;
+            const nextPhase = Math.min(currentPhase + 1, 10);
+            updatedProgress.set(playerId, nextPhase);
+          }
+        });
+
+        const updatedRounds = [...localSession.rounds, newRound];
+        setLocalSession({
+          ...localSession,
+          rounds: updatedRounds,
+          phase10Progress: updatedProgress,
+        });
+
+        toast.success('Round submitted successfully');
+      } else {
+        // Quick session - just update local state
+        const updatedRounds = [...localSession.rounds, newRound];
+        setLocalSession({ ...localSession, rounds: updatedRounds });
+      }
+
+      setIsAddingRound(false);
+      setResetNonce((prev) => prev + 1);
+    } catch (error: any) {
+      const errorMessage = error?.message || 'Failed to submit round';
+      toast.error(errorMessage);
+    } finally {
+      setIsSubmittingRound(false);
     }
   };
 
@@ -149,6 +236,12 @@ export default function ScoreSheetScreen() {
     }
   };
 
+  const getPlayerPhase = (playerId: string): number => {
+    if (!localSession.phase10Progress) return 1;
+    const phase = localSession.phase10Progress.get(playerId) || 1;
+    return Math.max(1, Math.min(10, phase));
+  };
+
   const renderScoreEntry = () => {
     if (localSession.gameType === 'skyjo') {
       return (
@@ -180,6 +273,22 @@ export default function ScoreSheetScreen() {
           key={resetNonce}
           players={localSession.players}
           onSubmit={(scores, state) => handleAddRound(scores, { type: 'flip7', state })}
+        />
+      );
+    } else if (localSession.gameType === 'phase10') {
+      const isPhase10SavedSession = !isQuickSession;
+      return (
+        <Phase10ScoreEntry
+          key={resetNonce}
+          players={localSession.players}
+          onSubmit={(scores, state) =>
+            isPhase10SavedSession
+              ? handleAddPhase10Round(scores, { type: 'phase10', state })
+              : handleAddRound(scores, { type: 'phase10', state })
+          }
+          phase10Progress={localSession.phase10Progress}
+          currentUserPrincipal={identity?.getPrincipal().toString()}
+          isSubmitting={isSubmittingRound}
         />
       );
     } else if (localSession.gameType === 'genericGame') {
@@ -214,6 +323,8 @@ export default function ScoreSheetScreen() {
     }
     return null;
   };
+
+  const isPhase10 = localSession.gameType === 'phase10' && !isQuickSession;
 
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
@@ -262,16 +373,49 @@ export default function ScoreSheetScreen() {
                 key={standing.playerId}
                 className="flex items-center justify-between p-3 rounded-lg border bg-card"
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 flex-1">
                   <span className="text-lg font-semibold text-muted-foreground w-6">#{index + 1}</span>
-                  <span className="font-medium">{standing.playerName}</span>
+                  <div className="flex items-center gap-2 flex-1">
+                    <span className="font-medium">{standing.playerName}</span>
+                    {isPhase10 && (
+                      <span className="text-xs text-muted-foreground">
+                        (Phase {getPlayerPhase(standing.playerId)})
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <span className="text-xl font-bold">{standing.total}</span>
+                <span className="text-lg font-semibold">{standing.total}</span>
               </div>
             ))}
           </div>
         </CardContent>
       </Card>
+
+      {!gameEnd.isEnded && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>
+                {isAddingRound ? `Round ${localSession.rounds.length + 1}` : 'Add New Round'}
+              </span>
+              {!isAddingRound && (
+                <Button size="sm" onClick={() => setIsAddingRound(true)}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add Round
+                </Button>
+              )}
+            </CardTitle>
+          </CardHeader>
+          {isAddingRound && (
+            <CardContent className="space-y-4">
+              {renderScoreEntry()}
+              <Button variant="outline" onClick={handleCancelAddRound} className="w-full">
+                Cancel
+              </Button>
+            </CardContent>
+          )}
+        </Card>
+      )}
 
       {localSession.rounds.length > 0 && (
         <Card>
@@ -286,25 +430,6 @@ export default function ScoreSheetScreen() {
             />
           </CardContent>
         </Card>
-      )}
-
-      {isAddingRound ? (
-        <Card>
-          <CardHeader>
-            <CardTitle>Round {localSession.rounds.length + 1}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {renderScoreEntry()}
-            <Button variant="outline" onClick={handleCancelAddRound} className="w-full">
-              Cancel
-            </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <Button onClick={() => setIsAddingRound(true)} className="w-full" size="lg">
-          <Plus className="h-5 w-5 mr-2" />
-          Add Round {localSession.rounds.length + 1}
-        </Button>
       )}
 
       {editingRound && (

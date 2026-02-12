@@ -1,37 +1,38 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Support shared first place on tied winning scores",
+  "title": "Phase 10 score entry: always-visible phase-complete checkbox and right-aligned layout",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Update scoring result types and utilities to return all tied winners when a win condition is met.",
+      "summary": "Make the Phase complete checkbox always visible in Phase10ScoreEntry and default unchecked for new rounds while preserving edit-state and disable rules.",
       "acceptanceCriteria": [
-        "`frontend/src/lib/scoring.ts` no longer limits game-end results to a single winner when a tie occurs.",
-        "When the winning condition is met and multiple players share the winning score, the game-end result includes all tied players (not just the first one).",
-        "No TypeScript errors in callers due to the updated result type."
+        "On the Phase 10 round submission screen, each player row shows a checkbox with the label text \"Phase complete\" without requiring an extra click/tap to reveal it.",
+        "When adding a new round (no initialState provided), the checkbox renders unchecked for every player by default.",
+        "When editing an existing round (initialState provided), the checkbox state reflects the saved value from initialState (i.e., previously checked stays checked).",
+        "Checkbox disable rules remain consistent with current behavior (e.g., disabled when the current user does not own the player and/or while submitting)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/lib/scoring.ts",
+          "path": "frontend/src/components/scores/Phase10ScoreEntry.tsx",
           "operation": "modify",
-          "description": "Refactor the game-end result model from a single optional winner to a plural winners collection (supporting ties), and update checkGameEnd to compute the winning score then include all players tied at that score when the game-end condition is satisfied (e.g., for Nerts and Flip7). Ensure the exported types and return shapes remain consistent so downstream callers can be updated without TypeScript errors."
+          "description": "Remove the current \"reveal\" interaction (revealedCheckboxes + Phase complete button) and render the checkbox + \"Phase complete\" label for every player row unconditionally. Initialize phaseCompletions so that when initialState is absent it contains explicit false entries for all players (unchecked by default), and when initialState is present it is used but any missing players default to false. Keep existing disable rules tied to ownership and isSubmitting, and keep Phase 10 progression behavior tied to submission (UI-only change)."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Update the ScoreSheet game-over banner to display either a single winner or a tie for first with all tied names and the winning score.",
+      "summary": "Right-justify the Phase complete checkbox/label in the same row as the score input in Phase10ScoreEntry with responsive behavior.",
       "acceptanceCriteria": [
-        "In `frontend/src/screens/ScoreSheetScreen.tsx`, when the game is ended and multiple winners exist, the UI renders messaging that indicates a tie for first place (in English).",
-        "When exactly one winner exists, the UI continues to show the existing single-winner message.",
-        "The standings list remains unchanged and continues to render all players and totals."
+        "For each player card in Phase10ScoreEntry, the score input and the phase-complete control appear on the same horizontal line.",
+        "The phase-complete control (checkbox + \"Phase complete\" label) is visually aligned to the right side of the score entry area (right-justified), not below the input.",
+        "The layout remains usable on narrow/mobile widths (no overlapping controls; wraps gracefully if needed)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/screens/ScoreSheetScreen.tsx",
+          "path": "frontend/src/components/scores/Phase10ScoreEntry.tsx",
           "operation": "modify",
-          "description": "Update the game-over UI logic to consume the new plural winners result from checkGameEnd. When winners.length > 1, render English tie-for-first messaging that lists all tied player names and shows the shared winning score; when winners.length === 1, keep the existing single-winner phrasing. Do not change the standings rendering."
+          "description": "Adjust the player row layout so the score Input and the phase-complete control share a single flex row: make the Input expand (e.g., flex-1 with a sensible min-width) and place the checkbox+label group in a right-justified container (e.g., ml-auto, no shrinking). Ensure the row can wrap on very narrow widths without overlapping while still keeping the control aligned to the right when space allows."
         }
       ]
     }

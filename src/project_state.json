@@ -1,29 +1,22 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Build a Phase 10 game scorecard app supporting up to 10 players with manual per-round score entry, phased yes/no tracking, automatic phase advancement, phase-requirements pop-up per player's next phase, and game-end logic when someone completes Phase 10 (lowest score wins; ties share first place).",
-  "architectural_notes": [
-    "Score entry is manual (no card-by-card scoring); each round records score + phased boolean per player.",
-    "Phase progression is automatic and strictly ordered; advance only when phased=true for that round.",
-    "Game ends at end of a round once any player completes Phase 10; if multiple complete Phase 10 that round, winner still based on lowest total score.",
-    "End-of-game view shows final total scores and final phase per player only (no round list).",
-    "Ties for lowest total score are allowed; declare all tied players as winners.",
-    "Phase requirements are displayed via a pop-up for the current player's next phase only."
-  ],
+  "summary": "Implementing UI/UX updates to the Phase 10 round submission screen (phase completion checkbox/label placement and visibility behavior).",
+  "architectural_notes": [],
   "known_issues": [],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-update-the-game-end-result-model-to-support-multiple-winners-a-tie-instead-of-only-a-single-winner-and-ensure-the-scoring-utilities-can-return-all-tied-players-when-applicable",
-      "title": "Update the game-end result model to support multiple winners (a tie) instead of only a single `winner`, and ensure the scoring utilities can return all tied players when applicable.",
+      "id": "feature-update-the-phase-10-round-submission-ui-phase10scoreentry-so-the-phase-complete-checkbox-is-always-visible-next-to-each-player-s-score-entry-and-it-is-unchecked-by-default-when-entering-a-new-round-score",
+      "title": "Update the Phase 10 round submission UI (Phase10ScoreEntry) so the \"Phase complete\" checkbox is always visible next to each player's score entry, and it is unchecked by default when entering a new round score.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-update-the-game-over-ui-on-the-score-sheet-to-correctly-display-ties-for-first-place-if-multiple-winners-are-returned-show-all-tied-player-names-and-indicate-they-are-tied-for-first-place-with-the-winning-score",
-      "title": "Update the game-over UI on the score sheet to correctly display ties for first place: if multiple winners are returned, show all tied player names and indicate they are tied for first place with the winning score.",
+      "id": "feature-adjust-the-layout-on-the-phase-10-round-submission-screen-so-the-phase-complete-label-checkbox-control-is-right-justified-to-the-right-side-of-the-player-s-score-entry-box-in-the-same-row-as-the-score-input",
+      "title": "Adjust the layout on the Phase 10 round submission screen so the \"Phase complete\" label/checkbox control is right-justified to the right side of the player's score entry box (in the same row as the score input).",
       "reqIds": [
         "REQ-2"
       ],
@@ -33,43 +26,12 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Phase 10 scorecard: support up to 10 players (add/manage players)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-2",
-      "summary": "Round-by-round entry: manually enter each player's score and phased (yes/no) per round",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Automatic phase tracking: advance a player to the next phase when marked as phased for the round (phases advance strictly in order)",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Game end: end at end of round when any player completes Phase 10; show final scores and final phases only",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-5",
-      "summary": "Winner determination: lowest total score wins; if tie for lowest, all tied players share first place",
-      "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-6",
-      "summary": "Phase requirements UI: show current player's next phase requirements in a pop-up (similar to rules pop-up)",
+      "summary": "Update Phase 10 round submission UI: move phase-complete label/checkbox to the right of the player score entry box; checkbox always visible and unchecked by default while entering a score",
       "reqIds": [],
       "status": "pending"
     }
   ],
-  "gameProjectType": "none",
-  "projectName": "Support shared first place when winners tie on score",
+  "projectName": "Phase 10 round submission: always-visible unchecked phase-complete checkbox aligned right of score input",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

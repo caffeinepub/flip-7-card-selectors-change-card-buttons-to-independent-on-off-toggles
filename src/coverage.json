@@ -1,7 +1,7 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T23:18:44.923Z",
+  "generatedAt": "2026-02-12T13:29:07.687Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
@@ -12,24 +12,24 @@
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Update the game-end result model to support multiple winners (a tie) instead of only a single `winner`, and ensure the scoring utilities can return all tied players when applicable.",
+        "summary": "Update the Phase 10 round submission UI (Phase10ScoreEntry) so the \"Phase complete\" checkbox is always visible next to each player's score entry, and it is unchecked by default when entering a new round score.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/lib/scoring.ts"
+          "frontend/src/components/scores/Phase10ScoreEntry.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/lib/scoring.ts"
+          "frontend/src/components/scores/Phase10ScoreEntry.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Update the game-over UI on the score sheet to correctly display ties for first place: if multiple winners are returned, show all tied player names and indicate they are tied for first place with the winning score.",
+        "summary": "Adjust the layout on the Phase 10 round submission screen so the \"Phase complete\" label/checkbox control is right-justified to the right side of the player's score entry box (in the same row as the score input).",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/screens/ScoreSheetScreen.tsx"
+          "frontend/src/components/scores/Phase10ScoreEntry.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/screens/ScoreSheetScreen.tsx"
+          "frontend/src/components/scores/Phase10ScoreEntry.tsx"
         ]
       }
     ]
@@ -39,8 +39,7 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/lib/scoring.ts",
-    "frontend/src/screens/ScoreSheetScreen.tsx",
+    "frontend/src/components/scores/Phase10ScoreEntry.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

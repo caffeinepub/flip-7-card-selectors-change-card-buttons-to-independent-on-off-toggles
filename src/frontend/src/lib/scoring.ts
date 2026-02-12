@@ -14,7 +14,7 @@ export interface GameEndResult {
 export function getStandings(
   rounds: LocalRound[],
   players: SessionPlayer[],
-  gameType: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'genericGame'
+  gameType: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'phase10' | 'genericGame'
 ): PlayerStanding[] {
   const totals = new Map<string, number>();
 
@@ -39,7 +39,7 @@ export function getStandings(
     };
   });
 
-  if (gameType === 'flip7') {
+  if (gameType === 'flip7' || gameType === 'nerts' || gameType === 'milleBornes') {
     standings.sort((a, b) => b.total - a.total);
   } else {
     standings.sort((a, b) => a.total - b.total);
@@ -50,29 +50,33 @@ export function getStandings(
 
 export function checkGameEnd(
   standings: PlayerStanding[],
-  gameType: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'genericGame',
+  gameType: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'phase10' | 'genericGame',
   nertsWinTarget?: number,
-  flip7TargetScore?: number
+  flip7TargetScore?: number,
+  phase10WinTarget?: number
 ): GameEndResult {
-  if (gameType === 'nerts') {
-    const target = nertsWinTarget || 200;
-    const sortedByTotal = [...standings].sort((a, b) => b.total - a.total);
-    const topPlayer = sortedByTotal[0];
-    if (topPlayer && topPlayer.total >= target) {
-      const winningScore = topPlayer.total;
-      const allWinners = sortedByTotal.filter(p => p.total === winningScore);
-      return { isEnded: true, winners: allWinners };
+  if (gameType === 'nerts' && nertsWinTarget !== undefined) {
+    const topScore = standings[0]?.total || 0;
+    if (topScore >= nertsWinTarget) {
+      const winners = standings.filter(s => s.total === topScore);
+      return { isEnded: true, winners };
     }
-  } else if (gameType === 'flip7') {
-    const target = flip7TargetScore || 100;
-    const topPlayer = standings[0];
-    if (topPlayer && topPlayer.total >= target) {
-      const winningScore = topPlayer.total;
-      const allWinners = standings.filter(p => p.total === winningScore);
-      return { isEnded: true, winners: allWinners };
+  }
+
+  if (gameType === 'flip7' && flip7TargetScore !== undefined) {
+    const topScore = standings[0]?.total || 0;
+    if (topScore >= flip7TargetScore) {
+      const winners = standings.filter(s => s.total === topScore);
+      return { isEnded: true, winners };
     }
-  } else if (gameType === 'genericGame') {
-    return { isEnded: false, winners: [] };
+  }
+
+  if (gameType === 'phase10' && phase10WinTarget !== undefined && phase10WinTarget > 0) {
+    const topScore = standings[0]?.total || 0;
+    if (topScore >= phase10WinTarget) {
+      const winners = standings.filter(s => s.total === topScore);
+      return { isEnded: true, winners };
+    }
   }
 
   return { isEnded: false, winners: [] };

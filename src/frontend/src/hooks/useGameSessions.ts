@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { GameSession, GameType, PlayerScore } from '../backend';
+import type { GameSession, GameType, PlayerScore, Phase10Completion } from '../backend';
 
 export function useGameSessions() {
   const { actor, isFetching: actorFetching } = useActor();
@@ -38,14 +38,22 @@ export function useCreateGameSession() {
       playerIds,
       nertsWinTarget,
       flip7TargetScore,
+      phase10WinTarget,
     }: {
       gameType: GameType;
       playerIds: bigint[];
       nertsWinTarget?: bigint;
       flip7TargetScore?: bigint;
+      phase10WinTarget?: bigint;
     }) => {
       if (!actor) throw new Error('Actor not available');
-      return actor.createGameSession(gameType, playerIds, nertsWinTarget || null, flip7TargetScore || null);
+      return actor.createGameSession(
+        gameType, 
+        playerIds, 
+        nertsWinTarget || null, 
+        flip7TargetScore || null,
+        phase10WinTarget || null
+      );
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['gameSessions'] });
@@ -93,6 +101,32 @@ export function useUpdateRound() {
     }) => {
       if (!actor) throw new Error('Actor not available');
       return actor.updateRound(gameId, roundNumber, scores);
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['gameSession', variables.gameId.toString()] });
+      queryClient.invalidateQueries({ queryKey: ['gameSessions'] });
+    },
+  });
+}
+
+export function useSubmitPhase10Round() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      gameId,
+      roundNumber,
+      scores,
+      phaseCompletions,
+    }: {
+      gameId: bigint;
+      roundNumber: bigint;
+      scores: PlayerScore[];
+      phaseCompletions: Phase10Completion[];
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.submitPhase10Round(gameId, roundNumber, scores, phaseCompletions);
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['gameSession', variables.gameId.toString()] });

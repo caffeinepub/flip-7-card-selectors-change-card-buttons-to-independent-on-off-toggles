@@ -1,65 +1,62 @@
 {
   "kind": "build_request",
-  "title": "Support shared first place when winners tie on score",
+  "title": "Phase 10 round submission: always-visible unchecked phase-complete checkbox aligned right of score input",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Update the game-end result model to support multiple winners (a tie) instead of only a single `winner`, and ensure the scoring utilities can return all tied players when applicable.",
+      "text": "Update the Phase 10 round submission UI (Phase10ScoreEntry) so the \"Phase complete\" checkbox is always visible next to each player's score entry, and it is unchecked by default when entering a new round score.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-last"
+          "msg-4",
+          "msg-6"
         ],
         "quotes": [
-          "If there is a tie for Lois score then the players tie for first place"
+          "The checkbox should be present from the start and not require tapping the phase.",
+          "The check box should always be but unchecked when a player is entering a score"
         ]
       },
       "acceptanceCriteria": [
-        "`frontend/src/lib/scoring.ts` no longer limits game-end results to a single winner when a tie occurs.",
-        "When the winning condition is met and multiple players share the winning score, the game-end result includes all tied players (not just the first one).",
-        "No TypeScript errors in callers due to the updated result type."
+        "On the Phase 10 round submission screen, each player row shows a checkbox with the label text \"Phase complete\" without requiring an extra click/tap to reveal it.",
+        "When adding a new round (no initialState provided), the checkbox renders unchecked for every player by default.",
+        "When editing an existing round (initialState provided), the checkbox state reflects the saved value from initialState (i.e., previously checked stays checked).",
+        "Checkbox disable rules remain consistent with current behavior (e.g., disabled when the current user does not own the player and/or while submitting)."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Update the game-over UI on the score sheet to correctly display ties for first place: if multiple winners are returned, show all tied player names and indicate they are tied for first place with the winning score.",
+      "text": "Adjust the layout on the Phase 10 round submission screen so the \"Phase complete\" label/checkbox control is right-justified to the right side of the player's score entry box (in the same row as the score input).",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-last"
+          "msg-4",
+          "msg-6"
         ],
         "quotes": [
-          "If there is a tie for Lois score then the players tie for first place"
+          "Let’s move the phase complete text justified to the right of the player score entry box.",
+          "I’m talking about the current text label next to the checkbox."
         ]
       },
       "acceptanceCriteria": [
-        "In `frontend/src/screens/ScoreSheetScreen.tsx`, when the game is ended and multiple winners exist, the UI renders messaging that indicates a tie for first place (in English).",
-        "When exactly one winner exists, the UI continues to show the existing single-winner message.",
-        "The standings list remains unchanged and continues to render all players and totals."
+        "For each player card in Phase10ScoreEntry, the score input and the phase-complete control appear on the same horizontal line.",
+        "The phase-complete control (checkbox + \"Phase complete\" label) is visually aligned to the right side of the score entry area (right-justified), not below the input.",
+        "The layout remains usable on narrow/mobile widths (no overlapping controls; wraps gracefully if needed)."
       ]
     }
   ],
   "constraints": [
-    "Do not edit files under `frontend/src/components/ui` (read-only UI component sources).",
-    "Keep changes within the existing React + TypeScript + React Query + Tailwind stack; no new backend services."
+    "Do not edit files under frontend/src/components/ui (Shadcn components are read-only).",
+    "Do not edit frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, or frontend/src/main.tsx (immutable paths).",
+    "Keep all Phase 10 progression behavior tied to round submission; this change is UI-only."
   ],
   "nonGoals": [
-    "Implementing Phase 10 scoring, phase tracking, or end-of-game logic (only tie-handling behavior for winners is in scope for this request).",
-    "Adding game history storage or persistence changes."
+    "Do not change backend Motoko logic or Phase 10 progression rules.",
+    "Do not add new authentication mechanisms or change Internet Identity behavior.",
+    "Do not change scoring validation beyond what is necessary to support the checkbox visibility/layout change."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

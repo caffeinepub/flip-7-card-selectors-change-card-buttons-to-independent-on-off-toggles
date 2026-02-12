@@ -1,24 +1,46 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T23:18:44.921Z",
-  "summary": "REQ-1 appears implemented in scoring utilities by changing the game-end result shape to `winners: PlayerStanding[]` and returning all tied players for Nerts and Flip 7 when the win target is met. REQ-2 (ScoreSheetScreen game-over UI tie messaging) cannot be confirmed from the provided truncated diff snippet; there is no visible evidence of updated UI copy/logic handling multiple winners.",
+  "generatedAt": "2026-02-12T13:29:07.685Z",
+  "summary": "Diff shows Phase10ScoreEntry state initialization changes for phase-completion flags (default unchecked for new rounds; preserved when editing). The UI/layout changes (always-visible checkbox next to score input, right-justified alignment, and disable-rule preservation) are not verifiable from the truncated diff. Additional non-requested metadata/documentation files were modified.",
   "missing_requirements": [
     {
-      "id": "REQ-2",
-      "requirement": "Update the game-over UI on the score sheet to correctly display ties for first place: if multiple winners are returned, show all tied player names and indicate they are tied for first place with the winning score.",
-      "reason": "The provided `ScoreSheetScreen.tsx` diff is truncated and does not show any game-over UI rendering logic that formats/prints multiple winner names or a tie-for-first message. The snippet only shows `checkGameEnd(...)` being called.",
+      "id": "REQ-1",
+      "requirement": "Make the \"Phase complete\" checkbox always visible next to each player's score entry, with disable rules consistent with current behavior.",
+      "reason": "While phaseCompletions state is initialized (including default false for new rounds and loading from initialState), the truncated diff does not show the rendered checkbox/label being always visible, nor does it show the disable logic being preserved (e.g., disabled when not owner and/or while submitting).",
       "evidence": [
-        "frontend/src/screens/ScoreSheetScreen.tsx (truncated)"
+        "frontend/src/components/scores/Phase10ScoreEntry.tsx (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Adjust layout so the score input and \"Phase complete\" checkbox+label are on the same line, with the control right-justified and responsive on narrow widths.",
+      "reason": "The diff is truncated before the relevant JSX layout; there is no visible evidence that the checkbox+label is positioned on the same horizontal line as the score input and right-justified, or that responsive wrapping was handled.",
+      "evidence": [
+        "frontend/src/components/scores/Phase10ScoreEntry.tsx (truncated)"
       ]
     }
   ],
-  "hallucinated_features": [],
+  "hallucinated_features": [
+    {
+      "description": "Modified repository-wide frontend file summary documentation.",
+      "reason": "The BuildRequest only asks for a UI-only change in Phase10ScoreEntry; updating a broad file summary document is not requested.",
+      "evidence": [
+        "frontend-file-summaries.txt"
+      ]
+    },
+    {
+      "description": "Updated project_state.json to track/describe new feature requests (AR-1/AR-2/AR-3).",
+      "reason": "Project state tracking is not part of the requested UI change and is not mentioned in the BuildRequest.",
+      "evidence": [
+        "project_state.json"
+      ]
+    }
+  ],
   "confidence": 0.62,
   "changed_files": [
     "frontend-file-summaries.txt",
-    "frontend/src/lib/scoring.ts",
-    "frontend/src/screens/ScoreSheetScreen.tsx",
+    "frontend/src/components/scores/Phase10ScoreEntry.tsx",
     "project_state.json"
   ]
 }

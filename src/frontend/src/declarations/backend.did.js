@@ -21,6 +21,17 @@ export const ScoringMethod = IDL.Variant({
   'roundBased' : IDL.Null,
   'endOfGame' : IDL.Null,
 });
+export const Flip7Rules = IDL.Record({
+  'targetScore' : IDL.Nat,
+  'scoringMethod' : ScoringMethod,
+  'rulesSummary' : IDL.Text,
+  'gameEndCondition' : IDL.Text,
+});
+export const SkyjoRules = IDL.Record({
+  'scoringMethod' : ScoringMethod,
+  'rulesSummary' : IDL.Text,
+  'gameEndCondition' : IDL.Text,
+});
 export const NertsRules = IDL.Record({
   'winTarget' : IDL.Nat,
   'scoringDetails' : IDL.Text,
@@ -33,51 +44,25 @@ export const GenericGameRules = IDL.Record({
   'rulesSummary' : IDL.Text,
   'gameEndCondition' : IDL.Text,
 });
+export const MilleBornesRules = IDL.Record({
+  'scoringMethod' : ScoringMethod,
+  'rulesSummary' : IDL.Text,
+  'gameEndCondition' : IDL.Text,
+});
+export const Phase10Rules = IDL.Record({
+  'winTarget' : IDL.Nat,
+  'scoringDetails' : IDL.Text,
+  'scoringMethod' : ScoringMethod,
+  'rulesSummary' : IDL.Text,
+  'gameEndCondition' : IDL.Text,
+});
 export const GameType = IDL.Variant({
-  'flip7' : IDL.Record({
-    'targetScore' : IDL.Nat,
-    'scoringMethod' : ScoringMethod,
-    'rulesSummary' : IDL.Text,
-    'gameEndCondition' : IDL.Text,
-  }),
-  'skyjo' : IDL.Record({
-    'scoringMethod' : ScoringMethod,
-    'rulesSummary' : IDL.Text,
-    'gameEndCondition' : IDL.Text,
-  }),
+  'flip7' : Flip7Rules,
+  'skyjo' : SkyjoRules,
   'nerts' : NertsRules,
   'genericGame' : GenericGameRules,
-  'milleBornes' : IDL.Record({
-    'scoringMethod' : ScoringMethod,
-    'rulesSummary' : IDL.Text,
-    'gameEndCondition' : IDL.Text,
-  }),
-});
-export const Fields__1 = IDL.Record({
-  'id' : IDL.Nat,
-  'gamesPlayed' : IDL.Nat,
-  'owner' : IDL.Principal,
-  'name' : IDL.Text,
-  'wins' : IDL.Nat,
-  'totalScore' : IDL.Nat,
-  'averageScore' : IDL.Nat,
-});
-export const Fields = IDL.Record({ 'playerId' : IDL.Nat, 'score' : IDL.Nat });
-export const Fields__2 = IDL.Record({
-  'playerScores' : IDL.Vec(Fields),
-  'roundNumber' : IDL.Nat,
-});
-export const GameSession = IDL.Record({
-  'id' : IDL.Nat,
-  'owner' : IDL.Principal,
-  'createdAt' : IDL.Int,
-  'isActive' : IDL.Bool,
-  'players' : IDL.Vec(Fields__1),
-  'finalScores' : IDL.Opt(IDL.Vec(Fields)),
-  'flip7TargetScore' : IDL.Opt(IDL.Nat),
-  'gameType' : GameType,
-  'rounds' : IDL.Vec(Fields__2),
-  'nertsWinTarget' : IDL.Opt(IDL.Nat),
+  'milleBornes' : MilleBornesRules,
+  'phase10' : Phase10Rules,
 });
 export const PlayerProfile = IDL.Record({
   'id' : IDL.Nat,
@@ -88,9 +73,36 @@ export const PlayerProfile = IDL.Record({
   'totalScore' : IDL.Nat,
   'averageScore' : IDL.Nat,
 });
+export const Round = IDL.Record({
+  'playerScores' : IDL.Vec(PlayerScore),
+  'roundNumber' : IDL.Nat,
+});
+export const PlayerPhase = IDL.Record({
+  'currentPhase' : IDL.Nat,
+  'playerId' : IDL.Nat,
+});
+export const Phase10Progress = IDL.Vec(PlayerPhase);
+export const GameSession = IDL.Record({
+  'id' : IDL.Nat,
+  'phase10WinTarget' : IDL.Opt(IDL.Nat),
+  'owner' : IDL.Principal,
+  'createdAt' : IDL.Int,
+  'isActive' : IDL.Bool,
+  'players' : IDL.Vec(PlayerProfile),
+  'finalScores' : IDL.Opt(IDL.Vec(PlayerScore)),
+  'flip7TargetScore' : IDL.Opt(IDL.Nat),
+  'gameType' : GameType,
+  'rounds' : IDL.Vec(Round),
+  'phase10Progress' : IDL.Opt(Phase10Progress),
+  'nertsWinTarget' : IDL.Opt(IDL.Nat),
+});
 export const UserProfile = IDL.Record({
   'name' : IDL.Text,
   'email' : IDL.Opt(IDL.Text),
+});
+export const Phase10Completion = IDL.Record({
+  'playerId' : IDL.Nat,
+  'completed' : IDL.Bool,
 });
 
 export const idlService = IDL.Service({
@@ -98,7 +110,13 @@ export const idlService = IDL.Service({
   'addRound' : IDL.Func([IDL.Nat, IDL.Nat, IDL.Vec(PlayerScore)], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createGameSession' : IDL.Func(
-      [GameType, IDL.Vec(IDL.Nat), IDL.Opt(IDL.Nat), IDL.Opt(IDL.Nat)],
+      [
+        GameType,
+        IDL.Vec(IDL.Nat),
+        IDL.Opt(IDL.Nat),
+        IDL.Opt(IDL.Nat),
+        IDL.Opt(IDL.Nat),
+      ],
       [IDL.Nat],
       [],
     ),
@@ -121,6 +139,11 @@ export const idlService = IDL.Service({
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'submitPhase10Round' : IDL.Func(
+      [IDL.Nat, IDL.Nat, IDL.Vec(PlayerScore), IDL.Vec(Phase10Completion)],
+      [],
+      [],
+    ),
   'updateRound' : IDL.Func([IDL.Nat, IDL.Nat, IDL.Vec(PlayerScore)], [], []),
 });
 
@@ -137,6 +160,17 @@ export const idlFactory = ({ IDL }) => {
     'roundBased' : IDL.Null,
     'endOfGame' : IDL.Null,
   });
+  const Flip7Rules = IDL.Record({
+    'targetScore' : IDL.Nat,
+    'scoringMethod' : ScoringMethod,
+    'rulesSummary' : IDL.Text,
+    'gameEndCondition' : IDL.Text,
+  });
+  const SkyjoRules = IDL.Record({
+    'scoringMethod' : ScoringMethod,
+    'rulesSummary' : IDL.Text,
+    'gameEndCondition' : IDL.Text,
+  });
   const NertsRules = IDL.Record({
     'winTarget' : IDL.Nat,
     'scoringDetails' : IDL.Text,
@@ -149,51 +183,25 @@ export const idlFactory = ({ IDL }) => {
     'rulesSummary' : IDL.Text,
     'gameEndCondition' : IDL.Text,
   });
+  const MilleBornesRules = IDL.Record({
+    'scoringMethod' : ScoringMethod,
+    'rulesSummary' : IDL.Text,
+    'gameEndCondition' : IDL.Text,
+  });
+  const Phase10Rules = IDL.Record({
+    'winTarget' : IDL.Nat,
+    'scoringDetails' : IDL.Text,
+    'scoringMethod' : ScoringMethod,
+    'rulesSummary' : IDL.Text,
+    'gameEndCondition' : IDL.Text,
+  });
   const GameType = IDL.Variant({
-    'flip7' : IDL.Record({
-      'targetScore' : IDL.Nat,
-      'scoringMethod' : ScoringMethod,
-      'rulesSummary' : IDL.Text,
-      'gameEndCondition' : IDL.Text,
-    }),
-    'skyjo' : IDL.Record({
-      'scoringMethod' : ScoringMethod,
-      'rulesSummary' : IDL.Text,
-      'gameEndCondition' : IDL.Text,
-    }),
+    'flip7' : Flip7Rules,
+    'skyjo' : SkyjoRules,
     'nerts' : NertsRules,
     'genericGame' : GenericGameRules,
-    'milleBornes' : IDL.Record({
-      'scoringMethod' : ScoringMethod,
-      'rulesSummary' : IDL.Text,
-      'gameEndCondition' : IDL.Text,
-    }),
-  });
-  const Fields__1 = IDL.Record({
-    'id' : IDL.Nat,
-    'gamesPlayed' : IDL.Nat,
-    'owner' : IDL.Principal,
-    'name' : IDL.Text,
-    'wins' : IDL.Nat,
-    'totalScore' : IDL.Nat,
-    'averageScore' : IDL.Nat,
-  });
-  const Fields = IDL.Record({ 'playerId' : IDL.Nat, 'score' : IDL.Nat });
-  const Fields__2 = IDL.Record({
-    'playerScores' : IDL.Vec(Fields),
-    'roundNumber' : IDL.Nat,
-  });
-  const GameSession = IDL.Record({
-    'id' : IDL.Nat,
-    'owner' : IDL.Principal,
-    'createdAt' : IDL.Int,
-    'isActive' : IDL.Bool,
-    'players' : IDL.Vec(Fields__1),
-    'finalScores' : IDL.Opt(IDL.Vec(Fields)),
-    'flip7TargetScore' : IDL.Opt(IDL.Nat),
-    'gameType' : GameType,
-    'rounds' : IDL.Vec(Fields__2),
-    'nertsWinTarget' : IDL.Opt(IDL.Nat),
+    'milleBornes' : MilleBornesRules,
+    'phase10' : Phase10Rules,
   });
   const PlayerProfile = IDL.Record({
     'id' : IDL.Nat,
@@ -204,9 +212,36 @@ export const idlFactory = ({ IDL }) => {
     'totalScore' : IDL.Nat,
     'averageScore' : IDL.Nat,
   });
+  const Round = IDL.Record({
+    'playerScores' : IDL.Vec(PlayerScore),
+    'roundNumber' : IDL.Nat,
+  });
+  const PlayerPhase = IDL.Record({
+    'currentPhase' : IDL.Nat,
+    'playerId' : IDL.Nat,
+  });
+  const Phase10Progress = IDL.Vec(PlayerPhase);
+  const GameSession = IDL.Record({
+    'id' : IDL.Nat,
+    'phase10WinTarget' : IDL.Opt(IDL.Nat),
+    'owner' : IDL.Principal,
+    'createdAt' : IDL.Int,
+    'isActive' : IDL.Bool,
+    'players' : IDL.Vec(PlayerProfile),
+    'finalScores' : IDL.Opt(IDL.Vec(PlayerScore)),
+    'flip7TargetScore' : IDL.Opt(IDL.Nat),
+    'gameType' : GameType,
+    'rounds' : IDL.Vec(Round),
+    'phase10Progress' : IDL.Opt(Phase10Progress),
+    'nertsWinTarget' : IDL.Opt(IDL.Nat),
+  });
   const UserProfile = IDL.Record({
     'name' : IDL.Text,
     'email' : IDL.Opt(IDL.Text),
+  });
+  const Phase10Completion = IDL.Record({
+    'playerId' : IDL.Nat,
+    'completed' : IDL.Bool,
   });
   
   return IDL.Service({
@@ -214,7 +249,13 @@ export const idlFactory = ({ IDL }) => {
     'addRound' : IDL.Func([IDL.Nat, IDL.Nat, IDL.Vec(PlayerScore)], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createGameSession' : IDL.Func(
-        [GameType, IDL.Vec(IDL.Nat), IDL.Opt(IDL.Nat), IDL.Opt(IDL.Nat)],
+        [
+          GameType,
+          IDL.Vec(IDL.Nat),
+          IDL.Opt(IDL.Nat),
+          IDL.Opt(IDL.Nat),
+          IDL.Opt(IDL.Nat),
+        ],
         [IDL.Nat],
         [],
       ),
@@ -237,6 +278,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'submitPhase10Round' : IDL.Func(
+        [IDL.Nat, IDL.Nat, IDL.Vec(PlayerScore), IDL.Vec(Phase10Completion)],
+        [],
+        [],
+      ),
     'updateRound' : IDL.Func([IDL.Nat, IDL.Nat, IDL.Vec(PlayerScore)], [], []),
   });
 };

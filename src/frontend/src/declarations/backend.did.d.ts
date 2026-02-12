@@ -10,57 +10,38 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export interface Fields { 'playerId' : bigint, 'score' : bigint }
-export interface Fields__1 {
-  'id' : bigint,
-  'gamesPlayed' : bigint,
-  'owner' : Principal,
-  'name' : string,
-  'wins' : bigint,
-  'totalScore' : bigint,
-  'averageScore' : bigint,
-}
-export interface Fields__2 {
-  'playerScores' : Array<Fields>,
-  'roundNumber' : bigint,
+export interface Flip7Rules {
+  'targetScore' : bigint,
+  'scoringMethod' : ScoringMethod,
+  'rulesSummary' : string,
+  'gameEndCondition' : string,
 }
 export interface GameSession {
   'id' : bigint,
+  'phase10WinTarget' : [] | [bigint],
   'owner' : Principal,
   'createdAt' : bigint,
   'isActive' : boolean,
-  'players' : Array<Fields__1>,
-  'finalScores' : [] | [Array<Fields>],
+  'players' : Array<PlayerProfile>,
+  'finalScores' : [] | [Array<PlayerScore>],
   'flip7TargetScore' : [] | [bigint],
   'gameType' : GameType,
-  'rounds' : Array<Fields__2>,
+  'rounds' : Array<Round>,
+  'phase10Progress' : [] | [Phase10Progress],
   'nertsWinTarget' : [] | [bigint],
 }
-export type GameType = {
-    'flip7' : {
-      'targetScore' : bigint,
-      'scoringMethod' : ScoringMethod,
-      'rulesSummary' : string,
-      'gameEndCondition' : string,
-    }
-  } |
-  {
-    'skyjo' : {
-      'scoringMethod' : ScoringMethod,
-      'rulesSummary' : string,
-      'gameEndCondition' : string,
-    }
-  } |
+export type GameType = { 'flip7' : Flip7Rules } |
+  { 'skyjo' : SkyjoRules } |
   { 'nerts' : NertsRules } |
   { 'genericGame' : GenericGameRules } |
-  {
-    'milleBornes' : {
-      'scoringMethod' : ScoringMethod,
-      'rulesSummary' : string,
-      'gameEndCondition' : string,
-    }
-  };
+  { 'milleBornes' : MilleBornesRules } |
+  { 'phase10' : Phase10Rules };
 export interface GenericGameRules {
+  'scoringMethod' : ScoringMethod,
+  'rulesSummary' : string,
+  'gameEndCondition' : string,
+}
+export interface MilleBornesRules {
   'scoringMethod' : ScoringMethod,
   'rulesSummary' : string,
   'gameEndCondition' : string,
@@ -72,6 +53,19 @@ export interface NertsRules {
   'rulesSummary' : string,
   'gameEndCondition' : string,
 }
+export interface Phase10Completion {
+  'playerId' : bigint,
+  'completed' : boolean,
+}
+export type Phase10Progress = Array<PlayerPhase>;
+export interface Phase10Rules {
+  'winTarget' : bigint,
+  'scoringDetails' : string,
+  'scoringMethod' : ScoringMethod,
+  'rulesSummary' : string,
+  'gameEndCondition' : string,
+}
+export interface PlayerPhase { 'currentPhase' : bigint, 'playerId' : bigint }
 export interface PlayerProfile {
   'id' : bigint,
   'gamesPlayed' : bigint,
@@ -82,8 +76,17 @@ export interface PlayerProfile {
   'averageScore' : bigint,
 }
 export interface PlayerScore { 'playerId' : bigint, 'score' : bigint }
+export interface Round {
+  'playerScores' : Array<PlayerScore>,
+  'roundNumber' : bigint,
+}
 export type ScoringMethod = { 'roundBased' : null } |
   { 'endOfGame' : null };
+export interface SkyjoRules {
+  'scoringMethod' : ScoringMethod,
+  'rulesSummary' : string,
+  'gameEndCondition' : string,
+}
 export interface UserProfile { 'name' : string, 'email' : [] | [string] }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
@@ -93,7 +96,7 @@ export interface _SERVICE {
   'addRound' : ActorMethod<[bigint, bigint, Array<PlayerScore>], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'createGameSession' : ActorMethod<
-    [GameType, Array<bigint>, [] | [bigint], [] | [bigint]],
+    [GameType, Array<bigint>, [] | [bigint], [] | [bigint], [] | [bigint]],
     bigint
   >,
   'createPlayerProfile' : ActorMethod<[string], bigint>,
@@ -107,6 +110,10 @@ export interface _SERVICE {
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'submitPhase10Round' : ActorMethod<
+    [bigint, bigint, Array<PlayerScore>, Array<Phase10Completion>],
+    undefined
+  >,
   'updateRound' : ActorMethod<[bigint, bigint, Array<PlayerScore>], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;

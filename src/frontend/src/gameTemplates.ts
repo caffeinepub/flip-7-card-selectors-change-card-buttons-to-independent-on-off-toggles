@@ -2,7 +2,7 @@ import type { GameType } from './backend';
 import { ScoringMethod } from './backend';
 
 export interface GameTemplate {
-  id: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'genericGame';
+  id: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'phase10' | 'genericGame';
   name: string;
   rulesSummary: string;
   gameEndCondition: string;
@@ -57,6 +57,17 @@ export const GAME_TEMPLATES: Record<string, GameTemplate> = {
     minPlayers: 2,
     maxPlayers: 10,
   },
+  phase10: {
+    id: 'phase10',
+    name: 'Phase 10',
+    rulesSummary:
+      'Rummy-type card game where players compete to complete 10 different phases. Points are accumulated based on cards left in hand when a player goes out.',
+    gameEndCondition: 'Game ends when a player completes all 10 phases. The player with the lowest score wins.',
+    scoringMethod: 'roundBased',
+    icon: '🃏',
+    minPlayers: 2,
+    maxPlayers: 6,
+  },
   genericGame: {
     id: 'genericGame',
     name: 'Generic Game',
@@ -70,7 +81,7 @@ export const GAME_TEMPLATES: Record<string, GameTemplate> = {
   },
 };
 
-export function createGameType(templateId: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'genericGame'): GameType {
+export function createGameType(templateId: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'phase10' | 'genericGame'): GameType {
   const template = GAME_TEMPLATES[templateId];
   
   if (templateId === 'skyjo') {
@@ -112,6 +123,17 @@ export function createGameType(templateId: 'skyjo' | 'milleBornes' | 'nerts' | '
         targetScore: BigInt(100),
       },
     };
+  } else if (templateId === 'phase10') {
+    return {
+      __kind__: 'phase10',
+      phase10: {
+        rulesSummary: template.rulesSummary,
+        gameEndCondition: template.gameEndCondition,
+        scoringMethod: ScoringMethod.roundBased,
+        scoringDetails: '+5 for cards 1-9, +10 for cards 10-12, +15 for skip and reverse, +25 for wild cards. Round-based scoring.',
+        winTarget: BigInt(0),
+      },
+    };
   } else {
     return {
       __kind__: 'genericGame',
@@ -133,6 +155,8 @@ export function getGameTemplate(gameType: GameType): GameTemplate {
     return GAME_TEMPLATES.nerts;
   } else if (gameType.__kind__ === 'flip7') {
     return GAME_TEMPLATES.flip7;
+  } else if (gameType.__kind__ === 'phase10') {
+    return GAME_TEMPLATES.phase10;
   } else {
     return GAME_TEMPLATES.genericGame;
   }
