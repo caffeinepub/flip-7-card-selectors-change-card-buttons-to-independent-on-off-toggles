@@ -1,38 +1,69 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Phase 10 score entry: always-visible phase-complete checkbox and right-aligned layout",
+  "title": "Phase 10 checkbox toggle + submission completion handling (frontend)",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Make the Phase complete checkbox always visible in Phase10ScoreEntry and default unchecked for new rounds while preserving edit-state and disable rules.",
+      "summary": "Allow Phase 10 “phase complete” checkboxes to toggle freely (default unchecked) when starting a new round entry from ScoreSheetScreen.",
       "acceptanceCriteria": [
-        "On the Phase 10 round submission screen, each player row shows a checkbox with the label text \"Phase complete\" without requiring an extra click/tap to reveal it.",
-        "When adding a new round (no initialState provided), the checkbox renders unchecked for every player by default.",
-        "When editing an existing round (initialState provided), the checkbox state reflects the saved value from initialState (i.e., previously checked stays checked).",
-        "Checkbox disable rules remain consistent with current behavior (e.g., disabled when the current user does not own the player and/or while submitting)."
+        "When starting a new Phase 10 round entry, each player's phase-complete checkbox is unchecked by default.",
+        "If a user checks a player's box and then unchecks it before pressing “Submit Score”, the checkbox returns to unchecked state (no UI lock-in).",
+        "This behavior applies for the Phase 10 score submission flow rendered from ScoreSheetScreen."
       ],
       "file_operations": [
         {
+          "path": "frontend/src/screens/ScoreSheetScreen.tsx",
+          "operation": "modify",
+          "description": "Update the Phase10ScoreEntry wiring so the phase-complete checkbox is not locked into a one-way (checked-only) behavior for new round entry (i.e., stop enabling the oneWayCheckbox behavior when rendering Phase10ScoreEntry from ScoreSheetScreen)."
+        },
+        {
           "path": "frontend/src/components/scores/Phase10ScoreEntry.tsx",
           "operation": "modify",
-          "description": "Remove the current \"reveal\" interaction (revealedCheckboxes + Phase complete button) and render the checkbox + \"Phase complete\" label for every player row unconditionally. Initialize phaseCompletions so that when initialState is absent it contains explicit false entries for all players (unchecked by default), and when initialState is present it is used but any missing players default to false. Keep existing disable rules tied to ownership and isSubmitting, and keep Phase 10 progression behavior tied to submission (UI-only change)."
+          "description": "Ensure Phase 10 entry initialization keeps all players' phaseCompletions defaulted to false (unchecked) for new rounds, and that state updates always allow checked->unchecked transitions when oneWayCheckbox is not enabled."
         }
       ]
     },
     {
       "id": "REQ-2",
-      "summary": "Right-justify the Phase complete checkbox/label in the same row as the score input in Phase10ScoreEntry with responsive behavior.",
+      "summary": "Ensure Phase 10 phase-complete checkbox checkmark visibility matches a standard checkbox (visible only when checked).",
       "acceptanceCriteria": [
-        "For each player card in Phase10ScoreEntry, the score input and the phase-complete control appear on the same horizontal line.",
-        "The phase-complete control (checkbox + \"Phase complete\" label) is visually aligned to the right side of the score entry area (right-justified), not below the input.",
-        "The layout remains usable on narrow/mobile widths (no overlapping controls; wraps gracefully if needed)."
+        "Toggling the checkbox to checked displays the check indicator.",
+        "Toggling the checkbox to unchecked hides the check indicator.",
+        "No custom styling causes the check indicator to remain visible when unchecked."
       ],
       "file_operations": [
         {
           "path": "frontend/src/components/scores/Phase10ScoreEntry.tsx",
           "operation": "modify",
-          "description": "Adjust the player row layout so the score Input and the phase-complete control share a single flex row: make the Input expand (e.g., flex-1 with a sensible min-width) and place the checkbox+label group in a right-justified container (e.g., ml-auto, no shrinking). Ensure the row can wrap on very narrow widths without overlapping while still keeping the control aligned to the right when space allows."
+          "description": "Keep the Checkbox as a fully-controlled component (checked is always a boolean derived from state; onCheckedChange always writes the boolean to state) so the UI reliably re-renders and the check indicator tracks the checked value."
+        },
+        {
+          "path": "frontend/src/screens/ScoreSheetScreen.tsx",
+          "operation": "modify",
+          "description": "Verify Phase10ScoreEntry is rendered without any props that prevent unchecked state from being represented, ensuring the visual indicator can clear when unchecked."
+        }
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "summary": "At Phase 10 submission time, only treat players as completing a phase if their checkbox is checked at that moment (affecting both local quick sessions and saved-session submission payload).",
+      "acceptanceCriteria": [
+        "If a player’s checkbox is unchecked at submission time, the submitted payload and any derived updates do not treat that player as having completed a phase for that round.",
+        "If a player’s checkbox is checked at submission time, the submitted payload and any derived updates treat that player as having completed a phase for that round.",
+        "For saved sessions, the backend submission endpoint does not increment/update Phase 10 progress for any completion entries where completed=false.",
+        "For quick sessions (local-only), the local phase10Progress update logic does not increment phase for any players whose completion flag is false."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+          "operation": "modify",
+          "description": "When building the submitted Phase10EntryState in handleSubmit, snapshot the phaseCompletions map (e.g., clone it) so the submission reflects exactly what was checked/unchecked at click time."
+        },
+        {
+          "path": "frontend/src/screens/ScoreSheetScreen.tsx",
+          "operation": "modify",
+          "description": "On Phase 10 submission, derive phase progression and the saved-session submission data strictly from the completion flags that are true at submission time (e.g., compute updatedProgress only from completed=true and send only completed=true entries in the phaseCompletions array to avoid any false completion records)."
         }
       ]
     }

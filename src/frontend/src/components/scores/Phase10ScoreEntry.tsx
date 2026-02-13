@@ -12,6 +12,8 @@ interface Phase10ScoreEntryProps {
   phase10Progress?: Map<string, number>;
   currentUserPrincipal?: string;
   isSubmitting?: boolean;
+  compactCheckboxLayout?: boolean;
+  oneWayCheckbox?: boolean;
 }
 
 export default function Phase10ScoreEntry({
@@ -21,6 +23,8 @@ export default function Phase10ScoreEntry({
   phase10Progress,
   currentUserPrincipal,
   isSubmitting = false,
+  compactCheckboxLayout = false,
+  oneWayCheckbox = false,
 }: Phase10ScoreEntryProps) {
   const [playerScores, setPlayerScores] = useState<Map<string, string>>(() => {
     const initial = new Map<string, string>();
@@ -61,6 +65,13 @@ export default function Phase10ScoreEntry({
   const handlePhaseCompleteChange = (playerId: string, checked: boolean) => {
     setPhaseCompletions((prev) => {
       const next = new Map(prev);
+      const currentValue = prev.get(playerId) || false;
+      
+      // If oneWayCheckbox is enabled, prevent unchecking (checked -> unchecked transition)
+      if (oneWayCheckbox && currentValue && !checked) {
+        return prev; // No change, keep it checked
+      }
+      
       next.set(playerId, checked);
       return next;
     });
@@ -89,9 +100,10 @@ export default function Phase10ScoreEntry({
       return;
     }
 
+    // Snapshot the current phase completions state at submission time
     const entryState: Phase10EntryState = {
       playerScores: numericScores,
-      phaseCompletions,
+      phaseCompletions: new Map(phaseCompletions),
     };
 
     onSubmit(scores, entryState);
@@ -103,18 +115,15 @@ export default function Phase10ScoreEntry({
     return Math.max(1, Math.min(10, phase));
   };
 
-  const isPlayerOwner = (player: SessionPlayer): boolean => {
-    if (!currentUserPrincipal || !player.ownerPrincipal) return false;
-    return player.ownerPrincipal === currentUserPrincipal;
-  };
-
   return (
     <div className="space-y-4">
       {players.map((player) => {
         const playerId = typeof player.id === 'bigint' ? player.id.toString() : player.id;
         const currentPhase = getPlayerPhase(playerId);
-        const isOwner = isPlayerOwner(player);
         const isChecked = phaseCompletions.get(playerId) || false;
+        
+        // Only disable during submission
+        const checkboxDisabled = isSubmitting;
 
         return (
           <div key={playerId} className="space-y-2 p-4 border rounded-lg">
@@ -122,11 +131,25 @@ export default function Phase10ScoreEntry({
               <Label htmlFor={`score-${playerId}`} className="font-semibold">
                 {player.name}
               </Label>
-              <span className="text-sm font-medium text-muted-foreground">
-                Phase {currentPhase}
-              </span>
+              {compactCheckboxLayout ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    Phase {currentPhase}
+                  </span>
+                  <Checkbox
+                    id={`phase-complete-${playerId}`}
+                    checked={isChecked}
+                    disabled={checkboxDisabled}
+                    onCheckedChange={(checked) => handlePhaseCompleteChange(playerId, checked === true)}
+                  />
+                </div>
+              ) : (
+                <span className="text-sm font-medium text-muted-foreground">
+                  Phase {currentPhase}
+                </span>
+              )}
             </div>
-            <div className="flex items-center gap-3 flex-wrap">
+            {compactCheckboxLayout ? (
               <Input
                 id={`score-${playerId}`}
                 type="number"
@@ -134,31 +157,43 @@ export default function Phase10ScoreEntry({
                 value={playerScores.get(playerId) || ''}
                 onChange={(e) => handleScoreChange(playerId, e.target.value)}
                 disabled={isSubmitting}
-                className="flex-1 min-w-[120px]"
+                className="w-full"
               />
-              <div className="flex items-center gap-2 ml-auto">
-                <Checkbox
-                  id={`phase-complete-${playerId}`}
-                  checked={isChecked}
-                  disabled={!isOwner || isSubmitting}
-                  onCheckedChange={(checked) => handlePhaseCompleteChange(playerId, checked === true)}
+            ) : (
+              <div className="flex items-center gap-3 flex-wrap">
+                <Input
+                  id={`score-${playerId}`}
+                  type="number"
+                  placeholder="Enter score"
+                  value={playerScores.get(playerId) || ''}
+                  onChange={(e) => handleScoreChange(playerId, e.target.value)}
+                  disabled={isSubmitting}
+                  className="flex-1 min-w-[120px]"
                 />
-                <Label
-                  htmlFor={`phase-complete-${playerId}`}
-                  className={`text-sm font-medium leading-none cursor-pointer ${
-                    !isOwner || isSubmitting ? 'text-muted-foreground cursor-not-allowed' : ''
-                  }`}
-                >
-                  Phase complete
-                </Label>
+                <div className="flex items-center gap-2 ml-auto">
+                  <Checkbox
+                    id={`phase-complete-${playerId}`}
+                    checked={isChecked}
+                    disabled={checkboxDisabled}
+                    onCheckedChange={(checked) => handlePhaseCompleteChange(playerId, checked === true)}
+                  />
+                  <Label
+                    htmlFor={`phase-complete-${playerId}`}
+                    className={`text-sm font-medium leading-none cursor-pointer ${
+                      checkboxDisabled ? 'text-muted-foreground cursor-not-allowed' : ''
+                    }`}
+                  >
+                    Phase complete
+                  </Label>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         );
       })}
 
       <Button onClick={handleSubmit} className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? 'Submitting...' : 'Submit Round'}
+        {isSubmitting ? 'Submitting...' : 'Submit Score'}
       </Button>
     </div>
   );

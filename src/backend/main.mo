@@ -7,10 +7,8 @@ import Iter "mo:core/Iter";
 import Runtime "mo:core/Runtime";
 import Order "mo:core/Order";
 
-
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
-
 
 actor {
   type GameType = {
@@ -227,7 +225,7 @@ actor {
       case (null) { Runtime.trap("Player profile does not exist") };
       case (?profile) {
         if (profile.owner != caller and not AccessControl.isAdmin(accessControlState, caller)) {
-          Runtime.trap("Unauthorized: Can only view your own player profiles");
+          Runtime.trap("Unauthorized: Only view own player profiles");
         };
         profile;
       };
@@ -258,6 +256,14 @@ actor {
     Nat.compare(profile1.gamesPlayed, profile2.gamesPlayed);
   };
 
+  func comparePlayerScoresByScore(score1 : PlayerScore, score2 : PlayerScore) : Order.Order {
+    Nat.compare(score1.score, score2.score);
+  };
+
+  func comparePlayerPhasesByCurrentPhase(phase1 : PlayerPhase, phase2 : PlayerPhase) : Order.Order {
+    Nat.compare(phase1.currentPhase, phase2.currentPhase);
+  };
+
   public shared ({ caller }) func createGameSession(gameType : GameType, playerIds : [Nat], nertsWinTarget : ?Nat, flip7TargetScore : ?Nat, phase10WinTarget : ?Nat) : async Nat {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create game sessions");
@@ -279,7 +285,7 @@ actor {
       players = playersArray;
       rounds = [];
       finalScores = null;
-      createdAt = 1718192000; // TODO: Should be actual current timestamp
+      createdAt = 1718192000;
       isActive = true;
       owner = caller;
       nertsWinTarget;
@@ -566,12 +572,7 @@ actor {
     };
   };
 
-  public shared ({ caller }) func submitPhase10Round(
-    gameId : Nat,
-    roundNumber : Nat,
-    scores : [PlayerScore],
-    phaseCompletions : [Phase10Completion]
-  ) : async () {
+  public shared ({ caller }) func submitPhase10Round(gameId : Nat, roundNumber : Nat, scores : [PlayerScore], phaseCompletions : [Phase10Completion]) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can submit rounds");
     };
@@ -586,37 +587,31 @@ actor {
           Runtime.trap("Cannot submit rounds in a completed game.");
         };
 
-        // Process round
         let newRound = {
           roundNumber;
           playerScores = scores;
         };
         let updatedRounds = game.rounds.concat([newRound]);
 
-        // Process phase completions atomically with round submission
         let currentProgress = switch (game.phase10Progress) {
           case (?progress) { progress };
           case (null) {
-            // Initialize progress for all players at phase 1
             game.players.map(func(player) : PlayerPhase {
               { playerId = player.id; currentPhase = 1 }
             })
           };
         };
 
-        // Update phase progress based on completions
         var newProgress : [PlayerPhase] = currentProgress;
         for (completion in phaseCompletions.values()) {
-          // Only advance if completed is true
           if (completion.completed) {
             let playerId = completion.playerId;
             var foundPlayer = false;
-            
+
             let updatedProgress : [PlayerPhase] = newProgress.map(
               func(playerPhase : PlayerPhase) : PlayerPhase {
                 if (playerPhase.playerId == playerId) {
                   foundPlayer := true;
-                  // Advance phase by exactly +1, capped at Phase 10
                   let nextPhase = if (playerPhase.currentPhase < 10) {
                     playerPhase.currentPhase + 1;
                   } else {
@@ -633,7 +628,6 @@ actor {
             );
 
             if (not foundPlayer) {
-              // Player not in progress yet, initialize at phase 2 (completed phase 1)
               newProgress := newProgress.concat([{ playerId; currentPhase = 2 }]);
             } else {
               newProgress := updatedProgress;
@@ -641,7 +635,6 @@ actor {
           };
         };
 
-        // Check if game should end
         var gameShouldEnd = false;
         switch (game.gameType) {
           case (#phase10(_)) {
@@ -655,7 +648,6 @@ actor {
               };
               case (null) {};
             };
-            // Also check if any player completed phase 10
             for (playerPhase in newProgress.values()) {
               if (playerPhase.currentPhase >= 10) {
                 gameShouldEnd := true;
@@ -665,7 +657,6 @@ actor {
           case (_) {};
         };
 
-        // Create updated game session with both round and phase progress
         let updatedGame : GameSession = {
           id = game.id;
           gameType = game.gameType;
@@ -687,6 +678,9 @@ actor {
   };
 
   public query ({ caller }) func getGameSession(gameId : Nat) : async GameSession {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view game sessions");
+    };
     switch (gameSessions.get(gameId)) {
       case (null) { Runtime.trap("Game session does not exist") };
       case (?gameSession) {

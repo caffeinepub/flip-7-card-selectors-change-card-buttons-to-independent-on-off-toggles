@@ -1,24 +1,32 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Implementing UI/UX updates to the Phase 10 round submission screen (phase completion checkbox/label placement and visibility behavior).",
+  "summary": "Phase 10 score submission flow enhancements",
   "architectural_notes": [],
   "known_issues": [],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-update-the-phase-10-round-submission-ui-phase10scoreentry-so-the-phase-complete-checkbox-is-always-visible-next-to-each-player-s-score-entry-and-it-is-unchecked-by-default-when-entering-a-new-round-score",
-      "title": "Update the Phase 10 round submission UI (Phase10ScoreEntry) so the \"Phase complete\" checkbox is always visible next to each player's score entry, and it is unchecked by default when entering a new round score.",
+      "id": "feature-on-the-phase-10-score-submission-screen-allow-the-user-to-toggle-the-phase-complete-checkbox-freely-before-submitting-scores-checked-and-unchecked-with-the-default-state-unchecked-for-all-players-when-starting-a-new-round",
+      "title": "On the Phase 10 score submission screen, allow the user to toggle the “phase complete” checkbox freely before submitting scores (checked and unchecked), with the default state unchecked for all players when starting a new round.",
       "reqIds": [
         "REQ-1"
       ],
       "version": 1
     },
     {
-      "id": "feature-adjust-the-layout-on-the-phase-10-round-submission-screen-so-the-phase-complete-label-checkbox-control-is-right-justified-to-the-right-side-of-the-player-s-score-entry-box-in-the-same-row-as-the-score-input",
-      "title": "Adjust the layout on the Phase 10 round submission screen so the \"Phase complete\" label/checkbox control is right-justified to the right side of the player's score entry box (in the same row as the score input).",
+      "id": "feature-ensure-the-phase-10-phase-complete-checkbox-visually-behaves-like-a-standard-checkbox-the-checkmark-is-visible-only-when-checked-and-not-visible-when-unchecked",
+      "title": "Ensure the Phase 10 phase-complete checkbox visually behaves like a standard checkbox: the checkmark is visible only when checked and not visible when unchecked.",
       "reqIds": [
         "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-during-phase-10-score-submission-only-record-log-a-phase-completion-for-a-player-if-their-phase-complete-checkbox-is-checked-at-the-moment-the-round-is-submitted-if-unchecked-at-submission-time-do-not-apply-phase-progression-for-that-player",
+      "title": "During Phase 10 score submission, only record/log a phase completion for a player if their phase-complete checkbox is checked at the moment the round is submitted; if unchecked at submission time, do not apply phase progression for that player.",
+      "reqIds": [
+        "REQ-3"
       ],
       "version": 1
     }
@@ -26,12 +34,12 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Update Phase 10 round submission UI: move phase-complete label/checkbox to the right of the player score entry box; checkbox always visible and unchecked by default while entering a score",
+      "summary": "Phase 10 score submission: phase-complete checkbox defaults unchecked; user can toggle before submitting; only log phase completion if checked at submission time",
       "reqIds": [],
       "status": "pending"
     }
   ],
-  "projectName": "Phase 10 round submission: always-visible unchecked phase-complete checkbox aligned right of score input",
+  "projectName": "Fix Phase 10 phase-complete checkbox toggle and logging on score submission",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

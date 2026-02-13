@@ -1,39 +1,40 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T13:29:07.685Z",
-  "summary": "Diff shows Phase10ScoreEntry state initialization changes for phase-completion flags (default unchecked for new rounds; preserved when editing). The UI/layout changes (always-visible checkbox next to score input, right-justified alignment, and disable-rule preservation) are not verifiable from the truncated diff. Additional non-requested metadata/documentation files were modified.",
+  "generatedAt": "2026-02-12T20:49:03.587Z",
+  "summary": "Diff updates Phase10ScoreEntry to initialize phase-complete state to false for new rounds and snapshots completion state at submit time, but evidence is insufficient/absent for the required visual checkbox behavior and for ensuring phase progression is applied only when completed=true across both saved and quick sessions. The code also retains an optional one-way (non-uncheckable) checkbox mode that can conflict with the requested free toggling behavior.",
   "missing_requirements": [
     {
-      "id": "REQ-1",
-      "requirement": "Make the \"Phase complete\" checkbox always visible next to each player's score entry, with disable rules consistent with current behavior.",
-      "reason": "While phaseCompletions state is initialized (including default false for new rounds and loading from initialState), the truncated diff does not show the rendered checkbox/label being always visible, nor does it show the disable logic being preserved (e.g., disabled when not owner and/or while submitting).",
+      "id": "REQ-2",
+      "requirement": "Ensure the Phase 10 phase-complete checkbox visually behaves like a standard checkbox: the checkmark is visible only when checked and not visible when unchecked; no custom styling causes the check indicator to remain visible when unchecked.",
+      "reason": "The diff snippet does not show the actual Checkbox rendering props/styling (truncated after computing isChecked). There is no evidence in the provided diff summary that the visual checkmark issue was addressed.",
       "evidence": [
         "frontend/src/components/scores/Phase10ScoreEntry.tsx (truncated)"
       ]
     },
     {
-      "id": "REQ-2",
-      "requirement": "Adjust layout so the score input and \"Phase complete\" checkbox+label are on the same line, with the control right-justified and responsive on narrow widths.",
-      "reason": "The diff is truncated before the relevant JSX layout; there is no visible evidence that the checkbox+label is positioned on the same horizontal line as the score input and right-justified, or that responsive wrapping was handled.",
+      "id": "REQ-3",
+      "requirement": "During Phase 10 score submission, only record/log phase completion if checked at submission time; for saved sessions backend submission must not increment/update progress where completed=false; for quick sessions local phase10Progress must not increment for completed=false.",
+      "reason": "Frontend now snapshots `phaseCompletions` into `entryState` at submission time, but the diff provides no evidence that saved-session submission payload handling/backend update logic filters out completed=false, nor that quick-session local phase10Progress update logic ignores false completions. No backend files were modified in this diff summary.",
       "evidence": [
-        "frontend/src/components/scores/Phase10ScoreEntry.tsx (truncated)"
+        "frontend/src/components/scores/Phase10ScoreEntry.tsx (truncated)",
+        "frontend/src/screens/ScoreSheetScreen.tsx (truncated)"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Modified repository-wide frontend file summary documentation.",
-      "reason": "The BuildRequest only asks for a UI-only change in Phase10ScoreEntry; updating a broad file summary document is not requested.",
+      "description": "Optional one-way (non-uncheckable) phase-complete checkbox behavior via `oneWayCheckbox` prop that prevents unchecking once checked.",
+      "reason": "BuildRequest requires free toggling (check and uncheck) before submission; adding/retaining a mode that blocks unchecking is not requested and can directly violate REQ-1 depending on how it is used.",
       "evidence": [
-        "frontend-file-summaries.txt"
+        "frontend/src/components/scores/Phase10ScoreEntry.tsx (truncated)"
       ]
     },
     {
-      "description": "Updated project_state.json to track/describe new feature requests (AR-1/AR-2/AR-3).",
-      "reason": "Project state tracking is not part of the requested UI change and is not mentioned in the BuildRequest.",
+      "description": "Clamping Phase 10 progress/current phase values to the 1–10 range when reading session state.",
+      "reason": "Not requested by the BuildRequest (which explicitly calls out not changing Phase 10 sorting/standings logic and focuses only on checkbox submission behavior). This may be benign, but it is an unrequested behavioral change shown in the diff.",
       "evidence": [
-        "project_state.json"
+        "frontend/src/screens/ScoreSheetScreen.tsx (truncated)"
       ]
     }
   ],
@@ -41,6 +42,7 @@
   "changed_files": [
     "frontend-file-summaries.txt",
     "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+    "frontend/src/screens/ScoreSheetScreen.tsx",
     "project_state.json"
   ]
 }

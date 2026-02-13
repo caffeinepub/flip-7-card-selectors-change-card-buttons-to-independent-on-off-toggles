@@ -1,62 +1,88 @@
 {
   "kind": "build_request",
-  "title": "Phase 10 round submission: always-visible unchecked phase-complete checkbox aligned right of score input",
+  "title": "Fix Phase 10 phase-complete checkbox toggle and logging on score submission",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Update the Phase 10 round submission UI (Phase10ScoreEntry) so the \"Phase complete\" checkbox is always visible next to each player's score entry, and it is unchecked by default when entering a new round score.",
+      "text": "On the Phase 10 score submission screen, allow the user to toggle the “phase complete” checkbox freely before submitting scores (checked and unchecked), with the default state unchecked for all players when starting a new round.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-6"
+          "msg-1"
         ],
         "quotes": [
-          "The checkbox should be present from the start and not require tapping the phase.",
-          "The check box should always be but unchecked when a player is entering a score"
+          "The Phase 10 score submission screen.",
+          "The default state is unchecked. If checked, the player should have the ability to uncheck the box before submitting"
         ]
       },
       "acceptanceCriteria": [
-        "On the Phase 10 round submission screen, each player row shows a checkbox with the label text \"Phase complete\" without requiring an extra click/tap to reveal it.",
-        "When adding a new round (no initialState provided), the checkbox renders unchecked for every player by default.",
-        "When editing an existing round (initialState provided), the checkbox state reflects the saved value from initialState (i.e., previously checked stays checked).",
-        "Checkbox disable rules remain consistent with current behavior (e.g., disabled when the current user does not own the player and/or while submitting)."
+        "When starting a new Phase 10 round entry, each player's phase-complete checkbox is unchecked by default.",
+        "If a user checks a player's box and then unchecks it before pressing “Submit Score”, the checkbox returns to unchecked state (no UI lock-in).",
+        "This behavior applies for the Phase 10 score submission flow rendered from ScoreSheetScreen."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Adjust the layout on the Phase 10 round submission screen so the \"Phase complete\" label/checkbox control is right-justified to the right side of the player's score entry box (in the same row as the score input).",
+      "text": "Ensure the Phase 10 phase-complete checkbox visually behaves like a standard checkbox: the checkmark is visible only when checked and not visible when unchecked.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4",
-          "msg-6"
+          "msg-1"
         ],
         "quotes": [
-          "Let’s move the phase complete text justified to the right of the player score entry box.",
-          "I’m talking about the current text label next to the checkbox."
+          "When the box is checked the check mark appears. When the box is unchecked the check mark is not visible."
         ]
       },
       "acceptanceCriteria": [
-        "For each player card in Phase10ScoreEntry, the score input and the phase-complete control appear on the same horizontal line.",
-        "The phase-complete control (checkbox + \"Phase complete\" label) is visually aligned to the right side of the score entry area (right-justified), not below the input.",
-        "The layout remains usable on narrow/mobile widths (no overlapping controls; wraps gracefully if needed)."
+        "Toggling the checkbox to checked displays the check indicator.",
+        "Toggling the checkbox to unchecked hides the check indicator.",
+        "No custom styling causes the check indicator to remain visible when unchecked."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "During Phase 10 score submission, only record/log a phase completion for a player if their phase-complete checkbox is checked at the moment the round is submitted; if unchecked at submission time, do not apply phase progression for that player.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "Unchecking the box should be the phase is not complete, do not log a phase complete.",
+          "The box check is only logged as phase complete if the box is checked at the time of the scores being submitted."
+        ]
+      },
+      "acceptanceCriteria": [
+        "If a player’s checkbox is unchecked at submission time, the submitted payload and any derived updates do not treat that player as having completed a phase for that round.",
+        "If a player’s checkbox is checked at submission time, the submitted payload and any derived updates treat that player as having completed a phase for that round.",
+        "For saved sessions, the backend submission endpoint does not increment/update Phase 10 progress for any completion entries where completed=false.",
+        "For quick sessions (local-only), the local phase10Progress update logic does not increment phase for any players whose completion flag is false."
       ]
     }
   ],
   "constraints": [
-    "Do not edit files under frontend/src/components/ui (Shadcn components are read-only).",
-    "Do not edit frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, or frontend/src/main.tsx (immutable paths).",
-    "Keep all Phase 10 progression behavior tied to round submission; this change is UI-only."
+    "Do not modify any files under frontend/src/components/ui (Shadcn UI components are read-only and must be composed, not edited).",
+    "Do not edit frontend immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx.",
+    "Backend changes (if needed) must remain within the single-actor architecture in backend/main.mo; only add backend/migration.mo if state schema changes are required."
   ],
   "nonGoals": [
-    "Do not change backend Motoko logic or Phase 10 progression rules.",
-    "Do not add new authentication mechanisms or change Internet Identity behavior.",
-    "Do not change scoring validation beyond what is necessary to support the checkbox visibility/layout change."
+    "Do not change Phase 10 sorting/standings logic.",
+    "Do not add new gameplay rules beyond the phase-complete checkbox submission behavior.",
+    "Do not redesign unrelated parts of the score sheet UI."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

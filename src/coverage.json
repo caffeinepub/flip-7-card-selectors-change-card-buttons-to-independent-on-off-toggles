@@ -1,35 +1,52 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T13:29:07.687Z",
+  "generatedAt": "2026-02-12T20:49:03.590Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 2,
-    "implemented": 2,
+    "total": 3,
+    "implemented": 3,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Update the Phase 10 round submission UI (Phase10ScoreEntry) so the \"Phase complete\" checkbox is always visible next to each player's score entry, and it is unchecked by default when entering a new round score.",
+        "summary": "On the Phase 10 score submission screen, allow the user to toggle the “phase complete” checkbox freely before submitting scores (checked and unchecked), with the default state unchecked for all players when starting a new round.",
         "status": "implemented",
         "plannedFiles": [
+          "frontend/src/screens/ScoreSheetScreen.tsx",
           "frontend/src/components/scores/Phase10ScoreEntry.tsx"
         ],
         "matchedFiles": [
+          "frontend/src/screens/ScoreSheetScreen.tsx",
           "frontend/src/components/scores/Phase10ScoreEntry.tsx"
         ]
       },
       {
         "id": "REQ-2",
-        "summary": "Adjust the layout on the Phase 10 round submission screen so the \"Phase complete\" label/checkbox control is right-justified to the right side of the player's score entry box (in the same row as the score input).",
+        "summary": "Ensure the Phase 10 phase-complete checkbox visually behaves like a standard checkbox: the checkmark is visible only when checked and not visible when unchecked.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/scores/Phase10ScoreEntry.tsx"
+          "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+          "frontend/src/screens/ScoreSheetScreen.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/scores/Phase10ScoreEntry.tsx"
+          "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+          "frontend/src/screens/ScoreSheetScreen.tsx"
+        ]
+      },
+      {
+        "id": "REQ-3",
+        "summary": "During Phase 10 score submission, only record/log a phase completion for a player if their phase-complete checkbox is checked at the moment the round is submitted; if unchecked at submission time, do not apply phase progression for that player.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+          "frontend/src/screens/ScoreSheetScreen.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+          "frontend/src/screens/ScoreSheetScreen.tsx"
         ]
       }
     ]
@@ -39,7 +56,9 @@
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
+    "frontend/src/backend.d.ts",
     "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+    "frontend/src/screens/ScoreSheetScreen.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

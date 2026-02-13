@@ -14,7 +14,8 @@ export interface GameEndResult {
 export function getStandings(
   rounds: LocalRound[],
   players: SessionPlayer[],
-  gameType: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'phase10' | 'genericGame'
+  gameType: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'phase10' | 'genericGame',
+  phase10Progress?: Map<string, number>
 ): PlayerStanding[] {
   const totals = new Map<string, number>();
 
@@ -39,7 +40,26 @@ export function getStandings(
     };
   });
 
-  if (gameType === 'flip7' || gameType === 'nerts' || gameType === 'milleBornes') {
+  if (gameType === 'phase10') {
+    // Phase 10: Sort by phase (desc), then total score (asc), then playerId for deterministic ordering
+    standings.sort((a, b) => {
+      const phaseA = phase10Progress?.get(a.playerId) || 1;
+      const phaseB = phase10Progress?.get(b.playerId) || 1;
+      
+      // Higher phase first
+      if (phaseB !== phaseA) {
+        return phaseB - phaseA;
+      }
+      
+      // Lower score wins
+      if (a.total !== b.total) {
+        return a.total - b.total;
+      }
+      
+      // Deterministic tie-break by playerId
+      return a.playerId.localeCompare(b.playerId);
+    });
+  } else if (gameType === 'flip7' || gameType === 'nerts' || gameType === 'milleBornes') {
     standings.sort((a, b) => b.total - a.total);
   } else {
     standings.sort((a, b) => a.total - b.total);

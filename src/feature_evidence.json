@@ -2,10 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-phase-10-round-submission-ui-phase10scoreentry-so-the-phase-complete-checkbox-is-always-visible-next-to-each-player-s-score-entry-and-it-is-unchecked-by-default-when-entering-a-new-round-score",
-      "featureTitle": "Update the Phase 10 round submission UI (Phase10ScoreEntry) so the \"Phase complete\" checkbox is always visible next to each player's score entry, and it is unchecked by default when entering a new round score.",
+      "featureId": "feature-on-the-phase-10-score-submission-screen-allow-the-user-to-toggle-the-phase-complete-checkbox-freely-before-submitting-scores-checked-and-unchecked-with-the-default-state-unchecked-for-all-players-when-starting-a-new-round",
+      "featureTitle": "On the Phase 10 score submission screen, allow the user to toggle the “phase complete” checkbox freely before submitting scores (checked and unchecked), with the default state unchecked for all players when starting a new round.",
       "files": [
-        "frontend/src/components/scores/Phase10ScoreEntry.tsx"
+        "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+        "frontend/src/screens/ScoreSheetScreen.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -21,10 +22,11 @@
       "confidence": "high"
     },
     {
-      "featureId": "feature-adjust-the-layout-on-the-phase-10-round-submission-screen-so-the-phase-complete-label-checkbox-control-is-right-justified-to-the-right-side-of-the-player-s-score-entry-box-in-the-same-row-as-the-score-input",
-      "featureTitle": "Adjust the layout on the Phase 10 round submission screen so the \"Phase complete\" label/checkbox control is right-justified to the right side of the player's score entry box (in the same row as the score input).",
+      "featureId": "feature-ensure-the-phase-10-phase-complete-checkbox-visually-behaves-like-a-standard-checkbox-the-checkmark-is-visible-only-when-checked-and-not-visible-when-unchecked",
+      "featureTitle": "Ensure the Phase 10 phase-complete checkbox visually behaves like a standard checkbox: the checkmark is visible only when checked and not visible when unchecked.",
       "files": [
-        "frontend/src/components/scores/Phase10ScoreEntry.tsx"
+        "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+        "frontend/src/screens/ScoreSheetScreen.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -36,6 +38,26 @@
       ],
       "testIds": [
         "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-during-phase-10-score-submission-only-record-log-a-phase-completion-for-a-player-if-their-phase-complete-checkbox-is-checked-at-the-moment-the-round-is-submitted-if-unchecked-at-submission-time-do-not-apply-phase-progression-for-that-player",
+      "featureTitle": "During Phase 10 score submission, only record/log a phase completion for a player if their phase-complete checkbox is checked at the moment the round is submitted; if unchecked at submission time, do not apply phase progression for that player.",
+      "files": [
+        "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+        "frontend/src/screens/ScoreSheetScreen.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
       ],
       "confidence": "high"
     }

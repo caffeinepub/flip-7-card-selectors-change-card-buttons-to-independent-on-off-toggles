@@ -13,14 +13,16 @@ import NertsScoreEntry from './NertsScoreEntry';
 import Flip7ScoreEntry from './Flip7ScoreEntry';
 import GenericGameScoreEntry from './GenericGameScoreEntry';
 import Phase10ScoreEntry from './Phase10ScoreEntry';
-import type { LocalRound, SessionPlayer, GameType, RoundEntryState } from '../../lib/sessionTypes';
+import type { LocalRound, SessionPlayer, RoundEntryState } from '../../lib/sessionTypes';
 
 interface EditRoundDialogProps {
   round: LocalRound;
   players: SessionPlayer[];
-  gameType: GameType;
+  gameType: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'phase10' | 'genericGame';
   onSave: (roundNumber: number, scores: Map<string, number>, entryState?: RoundEntryState) => void;
   onClose: () => void;
+  phase10Progress?: Map<string, number>;
+  currentUserPrincipal?: string;
 }
 
 export default function EditRoundDialog({
@@ -29,8 +31,14 @@ export default function EditRoundDialog({
   gameType,
   onSave,
   onClose,
+  phase10Progress,
+  currentUserPrincipal,
 }: EditRoundDialogProps) {
   const [resetNonce, setResetNonce] = useState(0);
+
+  useEffect(() => {
+    setResetNonce((prev) => prev + 1);
+  }, [round.roundNumber]);
 
   const handleSave = (scores: Map<string, number>, entryState?: RoundEntryState) => {
     onSave(round.roundNumber, scores, entryState);
@@ -41,75 +49,100 @@ export default function EditRoundDialog({
     onClose();
   };
 
-  useEffect(() => {
-    setResetNonce((prev) => prev + 1);
-  }, [round.roundNumber]);
+  // Sort players for Phase 10 using the same logic as score entry
+  const getSortedPlayers = (): SessionPlayer[] => {
+    if (gameType !== 'phase10') {
+      return players;
+    }
+
+    const playersCopy = [...players];
+    playersCopy.sort((a, b) => {
+      const playerIdA = typeof a.id === 'bigint' ? a.id.toString() : a.id;
+      const playerIdB = typeof b.id === 'bigint' ? b.id.toString() : b.id;
+      
+      const phaseA = phase10Progress?.get(playerIdA) || 1;
+      const phaseB = phase10Progress?.get(playerIdB) || 1;
+      
+      // Higher phase first
+      if (phaseB !== phaseA) {
+        return phaseB - phaseA;
+      }
+      
+      // For edit dialog, we don't have access to all rounds to compute totals,
+      // so we just use the current round scores for secondary sort
+      const scoreA = round.scores.get(playerIdA) || 0;
+      const scoreB = round.scores.get(playerIdB) || 0;
+      
+      // Lower score wins
+      if (scoreA !== scoreB) {
+        return scoreA - scoreB;
+      }
+      
+      // Deterministic tie-break by playerId
+      return playerIdA.localeCompare(playerIdB);
+    });
+
+    return playersCopy;
+  };
 
   const renderScoreEntry = () => {
     if (gameType === 'skyjo') {
-      const initialState =
-        round.entryState?.type === 'skyjo' ? round.entryState.state : undefined;
       return (
         <SkyjoScoreEntry
           key={resetNonce}
           players={players}
           onSubmit={(scores, state) => handleSave(scores, { type: 'skyjo', state })}
-          initialState={initialState}
+          initialState={round.entryState?.type === 'skyjo' ? round.entryState.state : undefined}
         />
       );
     } else if (gameType === 'milleBornes') {
-      const initialState =
-        round.entryState?.type === 'milleBornes' ? round.entryState.state : undefined;
       return (
         <MilleBornesScoreEntry
           key={resetNonce}
           players={players}
           onSubmit={(scores, state) => handleSave(scores, { type: 'milleBornes', state })}
-          initialState={initialState}
+          initialState={round.entryState?.type === 'milleBornes' ? round.entryState.state : undefined}
         />
       );
     } else if (gameType === 'nerts') {
-      const initialState =
-        round.entryState?.type === 'nerts' ? round.entryState.state : undefined;
       return (
         <NertsScoreEntry
           key={resetNonce}
           players={players}
           onSubmit={(scores, state) => handleSave(scores, { type: 'nerts', state })}
-          initialState={initialState}
+          initialState={round.entryState?.type === 'nerts' ? round.entryState.state : undefined}
         />
       );
     } else if (gameType === 'flip7') {
-      const initialState =
-        round.entryState?.type === 'flip7' ? round.entryState.state : undefined;
       return (
         <Flip7ScoreEntry
           key={resetNonce}
           players={players}
           onSubmit={(scores, state) => handleSave(scores, { type: 'flip7', state })}
-          initialState={initialState}
+          initialState={round.entryState?.type === 'flip7' ? round.entryState.state : undefined}
         />
       );
     } else if (gameType === 'phase10') {
-      const initialState =
-        round.entryState?.type === 'phase10' ? round.entryState.state : undefined;
+      const sortedPlayers = getSortedPlayers();
       return (
         <Phase10ScoreEntry
           key={resetNonce}
-          players={players}
+          players={sortedPlayers}
           onSubmit={(scores, state) => handleSave(scores, { type: 'phase10', state })}
-          initialState={initialState}
+          initialState={round.entryState?.type === 'phase10' ? round.entryState.state : undefined}
+          phase10Progress={phase10Progress}
+          currentUserPrincipal={currentUserPrincipal}
+          compactCheckboxLayout={true}
+          oneWayCheckbox={false}
         />
       );
     } else if (gameType === 'genericGame') {
-      const initialState =
-        round.entryState?.type === 'genericGame' ? round.entryState.state : undefined;
       return (
         <GenericGameScoreEntry
           key={resetNonce}
           players={players}
           onSubmit={(scores, state) => handleSave(scores, { type: 'genericGame', state })}
-          initialState={initialState}
+          initialState={round.entryState?.type === 'genericGame' ? round.entryState.state : undefined}
         />
       );
     }
@@ -122,7 +155,9 @@ export default function EditRoundDialog({
         <DialogHeader>
           <DialogTitle>Edit Round {round.roundNumber}</DialogTitle>
         </DialogHeader>
-        <div className="py-4">{renderScoreEntry()}</div>
+        <div className="py-4">
+          {renderScoreEntry()}
+        </div>
         <DialogFooter>
           <Button variant="outline" onClick={handleCancel}>
             Cancel
