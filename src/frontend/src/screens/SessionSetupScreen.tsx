@@ -3,6 +3,7 @@ import { useNavigate, useParams } from '@tanstack/react-router';
 import { useCurrentUser } from '../hooks/useCurrentUser';
 import { usePlayerProfiles, useCreatePlayerProfile } from '../hooks/usePlayerProfiles';
 import { useCreateGameSession } from '../hooks/useGameSessions';
+import { useSpiritsOfTheWildAnimals } from '../hooks/useSpiritsOfTheWildAnimals';
 import { GAME_TEMPLATES, createGameType } from '../gameTemplates';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -20,6 +21,7 @@ export default function SessionSetupScreen() {
   const navigate = useNavigate();
   const { isAuthenticated } = useCurrentUser();
   const { data: profiles = [], isLoading: profilesLoading } = usePlayerProfiles();
+  const { data: animals = [], isLoading: animalsLoading } = useSpiritsOfTheWildAnimals();
   const createProfile = useCreatePlayerProfile();
   const createSession = useCreateGameSession();
 
@@ -32,12 +34,15 @@ export default function SessionSetupScreen() {
   const [flip7TargetScore, setFlip7TargetScore] = useState('100');
   const [phase10WinTarget, setPhase10WinTarget] = useState('0');
   const [rulesDialogOpen, setRulesDialogOpen] = useState(false);
+  const [selectedAnimalIds, setSelectedAnimalIds] = useState<Set<bigint>>(new Set([BigInt(0)])); // Default to Owl
 
   const template = GAME_TEMPLATES[gameType];
 
   if (!template) {
     return <div>Game not found</div>;
   }
+
+  const isSpiritsGame = template.id === 'spiritsOwl';
 
   const handleToggleProfile = (profileId: bigint) => {
     const newSet = new Set(selectedProfileIds);
@@ -47,6 +52,16 @@ export default function SessionSetupScreen() {
       newSet.add(profileId);
     }
     setSelectedProfileIds(newSet);
+  };
+
+  const handleToggleAnimal = (animalId: bigint) => {
+    const newSet = new Set(selectedAnimalIds);
+    if (newSet.has(animalId)) {
+      newSet.delete(animalId);
+    } else {
+      newSet.add(animalId);
+    }
+    setSelectedAnimalIds(newSet);
   };
 
   const handleAddProfile = async () => {
@@ -71,6 +86,9 @@ export default function SessionSetupScreen() {
   };
 
   const handleStartGame = async () => {
+    // Ensure at least one animal is selected for Spirits games
+    const activeAnimalIds = selectedAnimalIds.size > 0 ? Array.from(selectedAnimalIds) : [BigInt(0)];
+
     if (mode === 'profiles' && isAuthenticated) {
       const playerIds = Array.from(selectedProfileIds);
       if (playerIds.length < template.minPlayers) {
@@ -82,6 +100,7 @@ export default function SessionSetupScreen() {
         return;
       }
 
+      // Create the backend game type using the template id (spiritsOwl will map to genericGame with Owl rules)
       const gameTypeObj = createGameType(template.id);
       const nertsTarget = template.id === 'nerts' ? BigInt(parseInt(nertsWinTarget, 10)) : undefined;
       const flip7Target = template.id === 'flip7' ? BigInt(parseInt(flip7TargetScore, 10)) : undefined;
@@ -93,7 +112,13 @@ export default function SessionSetupScreen() {
         flip7TargetScore: flip7Target,
         phase10WinTarget: phase10Target
       });
-      navigate({ to: '/game/$sessionId', params: { sessionId: sessionId.toString() } });
+      
+      // Navigate with active animal IDs for Spirits games
+      navigate({ 
+        to: '/game/$sessionId', 
+        params: { sessionId: sessionId.toString() },
+        state: isSpiritsGame ? { activeSpiritsAnimalIds: activeAnimalIds } : undefined
+      } as any);
     } else {
       if (quickPlayers.length < template.minPlayers) {
         alert(`Please add at least ${template.minPlayers} players`);
@@ -125,7 +150,8 @@ export default function SessionSetupScreen() {
             isQuick: true,
             nertsWinTarget: nertsTarget,
             flip7TargetScore: flip7Target,
-            phase10WinTarget: phase10Target
+            phase10WinTarget: phase10Target,
+            activeSpiritsAnimalIds: isSpiritsGame ? activeAnimalIds : undefined
           } 
         } as any,
       });
@@ -313,6 +339,46 @@ export default function SessionSetupScreen() {
               </div>
             </CardContent>
           </Card>
+
+          {isSpiritsGame && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Character Board Selection</CardTitle>
+                <CardDescription>
+                  Select which character boards to use in this game
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {animalsLoading ? (
+                  <p className="text-sm text-muted-foreground">Loading character boards...</p>
+                ) : animals.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No character boards available.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {animals.map((animal) => (
+                      <div
+                        key={animal.id.toString()}
+                        className="flex items-center space-x-2 p-2 rounded-lg hover:bg-accent"
+                      >
+                        <Checkbox
+                          id={`animal-${animal.id}`}
+                          checked={selectedAnimalIds.has(animal.id)}
+                          onCheckedChange={() => handleToggleAnimal(animal.id)}
+                        />
+                        <Label
+                          htmlFor={`animal-${animal.id}`}
+                          className="flex-1 cursor-pointer font-normal flex items-center gap-2"
+                        >
+                          <span className="text-2xl">{animal.icon}</span>
+                          <span>{animal.name}</span>
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         <TabsContent value="quick" className="space-y-4">
@@ -320,7 +386,7 @@ export default function SessionSetupScreen() {
             <CardHeader>
               <CardTitle>Quick Game Players</CardTitle>
               <CardDescription>
-                Add {template.minPlayers}-{template.maxPlayers} players for a quick game (not saved)
+                Add {template.minPlayers}-{template.maxPlayers} players for a quick game (no profile tracking)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -344,6 +410,8 @@ export default function SessionSetupScreen() {
                 </div>
               )}
 
+              <Separator />
+
               <div className="space-y-2">
                 <Label htmlFor="newQuickName">Add Player</Label>
                 <div className="flex gap-2">
@@ -354,28 +422,68 @@ export default function SessionSetupScreen() {
                     onChange={(e) => setNewQuickName(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddQuickPlayer()}
                   />
-                  <Button onClick={handleAddQuickPlayer} disabled={!newQuickName.trim()} size="icon">
+                  <Button
+                    onClick={handleAddQuickPlayer}
+                    disabled={!newQuickName.trim()}
+                    size="icon"
+                  >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
             </CardContent>
           </Card>
+
+          {isSpiritsGame && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Character Board Selection</CardTitle>
+                <CardDescription>
+                  Select which character boards to use in this game
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {animalsLoading ? (
+                  <p className="text-sm text-muted-foreground">Loading character boards...</p>
+                ) : animals.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No character boards available.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {animals.map((animal) => (
+                      <div
+                        key={animal.id.toString()}
+                        className="flex items-center space-x-2 p-2 rounded-lg hover:bg-accent"
+                      >
+                        <Checkbox
+                          id={`animal-quick-${animal.id}`}
+                          checked={selectedAnimalIds.has(animal.id)}
+                          onCheckedChange={() => handleToggleAnimal(animal.id)}
+                        />
+                        <Label
+                          htmlFor={`animal-quick-${animal.id}`}
+                          className="flex-1 cursor-pointer font-normal flex items-center gap-2"
+                        >
+                          <span className="text-2xl">{animal.icon}</span>
+                          <span>{animal.name}</span>
+                        </Label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 
-      <Card>
-        <CardContent className="pt-6">
-          <Button
-            onClick={handleStartGame}
-            disabled={!canStart || !isNertsTargetValid || !isFlip7TargetValid || !isPhase10TargetValid}
-            className="w-full"
-            size="lg"
-          >
-            {createSession.isPending ? 'Starting...' : `Start Game (${playerCount} players)`}
-          </Button>
-        </CardContent>
-      </Card>
+      <Button
+        onClick={handleStartGame}
+        disabled={!canStart || !isNertsTargetValid || !isFlip7TargetValid || !isPhase10TargetValid}
+        size="lg"
+        className="w-full"
+      >
+        {createSession.isPending ? 'Starting...' : 'Start Game'}
+      </Button>
 
       <GameRulesDialog
         open={rulesDialogOpen}

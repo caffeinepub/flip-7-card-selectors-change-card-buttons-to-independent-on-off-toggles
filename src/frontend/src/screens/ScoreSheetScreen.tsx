@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from '@tanstack/react-router';
 import { useGetGameSession, useAddRound, useUpdateRound, useSubmitPhase10Round } from '../hooks/useGameSessions';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { getGameTemplate } from '../gameTemplates';
+import { getGameTemplate, deriveLocalGameType, createGameType } from '../gameTemplates';
 import { getStandings, checkGameEnd } from '../lib/scoring';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -12,33 +12,34 @@ import SkyjoScoreEntry from '../components/scores/SkyjoScoreEntry';
 import MilleBornesScoreEntry from '../components/scores/MilleBornesScoreEntry';
 import NertsScoreEntry from '../components/scores/NertsScoreEntry';
 import Flip7ScoreEntry from '../components/scores/Flip7ScoreEntry';
-import GenericGameScoreEntry from '../components/scores/GenericGameScoreEntry';
 import Phase10ScoreEntry from '../components/scores/Phase10ScoreEntry';
+import GenericGameScoreEntry from '../components/scores/GenericGameScoreEntry';
+import SpiritsOwlScoreEntry from '../components/scores/SpiritsOwlScoreEntry';
 import RoundsTable from '../components/scores/RoundsTable';
 import EditRoundDialog from '../components/scores/EditRoundDialog';
-import type { LocalSession, LocalRound, RoundEntryState, SessionPlayer } from '../lib/sessionTypes';
-import { toast } from 'sonner';
+import type { LocalSession, SessionPlayer, LocalRound, RoundEntryState } from '../lib/sessionTypes';
+import type { PlayerScore, Phase10Completion } from '../backend';
+import { saveRoundEntryState, loadRoundEntryState } from '../lib/roundEntryStateStorage';
 
 export default function ScoreSheetScreen() {
   const { sessionId } = useParams({ from: '/game/$sessionId' });
   const navigate = useNavigate();
   const location = useLocation();
-  const isQuickSession = sessionId === 'quick';
   const { identity } = useInternetIdentity();
 
-  const { data: savedSession, isLoading: sessionLoading } = useGetGameSession(
-    isQuickSession ? null : BigInt(sessionId)
-  );
+  const isQuickSession = sessionId === 'quick';
+  const savedSessionId = isQuickSession ? null : BigInt(sessionId);
+
+  const { data: savedSession, isLoading: sessionLoading } = useGetGameSession(savedSessionId);
   const addRound = useAddRound();
   const updateRound = useUpdateRound();
   const submitPhase10Round = useSubmitPhase10Round();
 
   const [localSession, setLocalSession] = useState<LocalSession | null>(null);
-  const [isAddingRound, setIsAddingRound] = useState(false);
+  const [showScoreEntry, setShowScoreEntry] = useState(false);
   const [editingRound, setEditingRound] = useState<LocalRound | null>(null);
-  const [resetNonce, setResetNonce] = useState(0);
-  const [isSubmittingRound, setIsSubmittingRound] = useState(false);
 
+  // Initialize local session from saved session or quick session state
   useEffect(() => {
     if (isQuickSession) {
       const quickSession = (location.state as any)?.quickSession;
@@ -46,7 +47,8 @@ export default function ScoreSheetScreen() {
         setLocalSession(quickSession);
       }
     } else if (savedSession) {
-      const players = savedSession.players.map((p) => ({
+      const gameType = deriveLocalGameType(savedSession.gameType);
+      const players: SessionPlayer[] = savedSession.players.map((p) => ({
         id: p.id,
         name: p.name,
         isQuick: false,
@@ -58,63 +60,74 @@ export default function ScoreSheetScreen() {
         r.playerScores.forEach((ps) => {
           scores.set(ps.playerId.toString(), Number(ps.score));
         });
+
+        const entryState = loadRoundEntryState(
+          savedSession.id.toString(),
+          gameType,
+          Number(r.roundNumber)
+        );
+
         return {
           roundNumber: Number(r.roundNumber),
           scores,
+          entryState,
         };
       });
 
-      const gameTypeStr = savedSession.gameType.__kind__;
-      const nertsWinTarget = savedSession.nertsWinTarget ? Number(savedSession.nertsWinTarget) : undefined;
-      const flip7TargetScore = savedSession.flip7TargetScore ? Number(savedSession.flip7TargetScore) : undefined;
-      const phase10WinTarget = savedSession.phase10WinTarget ? Number(savedSession.phase10WinTarget) : undefined;
-
-      // Extract phase10Progress and clamp to 1-10
       const phase10Progress = savedSession.phase10Progress
         ? new Map(
-            savedSession.phase10Progress.map((p) => [
-              p.playerId.toString(),
-              Math.max(1, Math.min(10, Number(p.currentPhase))),
-            ])
+            savedSession.phase10Progress.map((pp) => [pp.playerId.toString(), Number(pp.currentPhase)])
           )
         : undefined;
 
+      // Extract active animal IDs from navigation state if available
+      const activeSpiritsAnimalIds = (location.state as any)?.activeSpiritsAnimalIds;
+
       setLocalSession({
-        gameType: gameTypeStr as any,
+        gameType,
         players,
         rounds,
         isQuick: false,
         savedSessionId: savedSession.id,
-        nertsWinTarget,
-        flip7TargetScore,
-        phase10WinTarget,
+        nertsWinTarget: savedSession.nertsWinTarget ? Number(savedSession.nertsWinTarget) : undefined,
+        flip7TargetScore: savedSession.flip7TargetScore ? Number(savedSession.flip7TargetScore) : undefined,
+        phase10WinTarget: savedSession.phase10WinTarget ? Number(savedSession.phase10WinTarget) : undefined,
         phase10Progress,
+        activeSpiritsAnimalIds: activeSpiritsAnimalIds || [BigInt(0)], // Default to Owl if not specified
       });
     }
   }, [isQuickSession, savedSession, location.state]);
 
-  useEffect(() => {
-    return () => {
-      setResetNonce((prev) => prev + 1);
-    };
-  }, [location.pathname]);
-
-  if (sessionLoading || !localSession) {
+  if (!localSession) {
     return (
-      <div className="flex items-center justify-center min-h-[50vh]">
+      <div className="max-w-4xl mx-auto p-4">
         <p className="text-muted-foreground">Loading session...</p>
       </div>
     );
   }
 
-  const template = getGameTemplate({ __kind__: localSession.gameType } as any);
+  const template = getGameTemplate(
+    localSession.gameType === 'spiritsOwl'
+      ? createGameType('spiritsOwl')
+      : createGameType(localSession.gameType)
+  );
+
   const standings = getStandings(
     localSession.rounds,
     localSession.players,
     localSession.gameType,
     localSession.phase10Progress
   );
-  const gameEnd = checkGameEnd(standings, localSession.gameType, localSession.nertsWinTarget, localSession.flip7TargetScore, localSession.phase10WinTarget);
+
+  const gameEndResult = checkGameEnd(
+    standings,
+    localSession.gameType,
+    localSession.nertsWinTarget,
+    localSession.flip7TargetScore,
+    localSession.phase10WinTarget
+  );
+
+  const gameEnded = gameEndResult.isEnded;
 
   const handleAddRound = async (scores: Map<string, number>, entryState?: RoundEntryState) => {
     const roundNumber = localSession.rounds.length + 1;
@@ -126,282 +139,224 @@ export default function ScoreSheetScreen() {
 
     const updatedRounds = [...localSession.rounds, newRound];
     setLocalSession({ ...localSession, rounds: updatedRounds });
-    setIsAddingRound(false);
-    setResetNonce((prev) => prev + 1);
 
-    if (!isQuickSession && localSession.savedSessionId) {
-      const playerScores = Array.from(scores.entries()).map(([playerId, score]) => ({
+    if (entryState) {
+      const storageSessionId = isQuickSession ? 'quick' : savedSessionId!.toString();
+      saveRoundEntryState(storageSessionId, localSession.gameType, roundNumber, entryState);
+    }
+
+    if (!isQuickSession && savedSessionId) {
+      const playerScores: PlayerScore[] = Array.from(scores.entries()).map(([playerId, score]) => ({
         playerId: BigInt(playerId),
         score: BigInt(score),
       }));
-      await addRound.mutateAsync({
-        gameId: localSession.savedSessionId,
-        roundNumber: BigInt(roundNumber),
-        scores: playerScores,
-      });
-    }
-  };
 
-  const handleAddPhase10Round = async (scores: Map<string, number>, entryState: RoundEntryState) => {
-    if (entryState.type !== 'phase10') return;
-
-    const roundNumber = localSession.rounds.length + 1;
-    const newRound: LocalRound = {
-      roundNumber,
-      scores,
-      entryState,
-    };
-
-    setIsSubmittingRound(true);
-
-    try {
-      // Compute new phase progress locally for immediate UI update - only for completed phases
-      const updatedProgress = new Map(localSession.phase10Progress || new Map());
-      entryState.state.phaseCompletions.forEach((completed, playerId) => {
-        if (completed) {
-          const currentPhase = updatedProgress.get(playerId) || 1;
-          const nextPhase = Math.min(currentPhase + 1, 10);
-          updatedProgress.set(playerId, nextPhase);
-        }
-      });
-
-      if (!isQuickSession && localSession.savedSessionId) {
-        // Saved session: submit to backend
-        const playerScores = Array.from(scores.entries()).map(([playerId, score]) => ({
+      if (localSession.gameType === 'phase10' && entryState?.type === 'phase10') {
+        const phaseCompletions: Phase10Completion[] = Array.from(
+          entryState.state.phaseCompletions.entries()
+        ).map(([playerId, completed]) => ({
           playerId: BigInt(playerId),
-          score: BigInt(score),
+          completed,
         }));
 
-        // Send all completion entries to backend (backend will filter by completed=true)
-        const phaseCompletions = Array.from(entryState.state.phaseCompletions.entries()).map(
-          ([playerId, completed]) => ({
-            playerId: BigInt(playerId),
-            completed,
-          })
-        );
-
         await submitPhase10Round.mutateAsync({
-          gameId: localSession.savedSessionId,
+          gameId: savedSessionId,
           roundNumber: BigInt(roundNumber),
           scores: playerScores,
           phaseCompletions,
         });
 
-        // Update local state with new round and phase progress after successful backend submission
-        const updatedRounds = [...localSession.rounds, newRound];
-        setLocalSession({
-          ...localSession,
-          rounds: updatedRounds,
-          phase10Progress: updatedProgress,
-        });
-
-        toast.success('Round submitted successfully');
+        if (savedSession?.phase10Progress) {
+          const updatedProgress = new Map(localSession.phase10Progress);
+          phaseCompletions.forEach((pc) => {
+            if (pc.completed) {
+              const currentPhase = updatedProgress.get(pc.playerId.toString()) || 1;
+              updatedProgress.set(pc.playerId.toString(), Math.min(currentPhase + 1, 10));
+            }
+          });
+          setLocalSession({ ...localSession, rounds: updatedRounds, phase10Progress: updatedProgress });
+        }
       } else {
-        // Quick session: update local state with computed phase progression
-        const updatedRounds = [...localSession.rounds, newRound];
-        setLocalSession({
-          ...localSession,
-          rounds: updatedRounds,
-          phase10Progress: updatedProgress,
+        await addRound.mutateAsync({
+          gameId: savedSessionId,
+          roundNumber: BigInt(roundNumber),
+          scores: playerScores,
         });
       }
-
-      setIsAddingRound(false);
-      setResetNonce((prev) => prev + 1);
-    } catch (error: any) {
-      const errorMessage = error?.message || 'Failed to submit round';
-      toast.error(errorMessage);
-    } finally {
-      setIsSubmittingRound(false);
     }
+
+    setShowScoreEntry(false);
   };
 
-  const handleUpdateRound = async (roundNumber: number, scores: Map<string, number>, entryState?: RoundEntryState) => {
+  const handleUpdateRound = async (
+    roundNumber: number,
+    scores: Map<string, number>,
+    entryState?: RoundEntryState
+  ) => {
     const updatedRounds = localSession.rounds.map((r) =>
       r.roundNumber === roundNumber ? { ...r, scores, entryState } : r
     );
     setLocalSession({ ...localSession, rounds: updatedRounds });
-    setEditingRound(null);
 
-    if (!isQuickSession && localSession.savedSessionId) {
-      const playerScores = Array.from(scores.entries()).map(([playerId, score]) => ({
+    if (entryState) {
+      const storageSessionId = isQuickSession ? 'quick' : savedSessionId!.toString();
+      saveRoundEntryState(storageSessionId, localSession.gameType, roundNumber, entryState);
+    }
+
+    if (!isQuickSession && savedSessionId) {
+      const playerScores: PlayerScore[] = Array.from(scores.entries()).map(([playerId, score]) => ({
         playerId: BigInt(playerId),
         score: BigInt(score),
       }));
-      await updateRound.mutateAsync({
-        gameId: localSession.savedSessionId,
-        roundNumber: BigInt(roundNumber),
-        scores: playerScores,
-      });
-    }
-  };
 
-  const handleCancelAddRound = () => {
-    setIsAddingRound(false);
-    setResetNonce((prev) => prev + 1);
+      if (localSession.gameType === 'phase10' && entryState?.type === 'phase10') {
+        const phaseCompletions: Phase10Completion[] = Array.from(
+          entryState.state.phaseCompletions.entries()
+        ).map(([playerId, completed]) => ({
+          playerId: BigInt(playerId),
+          completed,
+        }));
+
+        await submitPhase10Round.mutateAsync({
+          gameId: savedSessionId,
+          roundNumber: BigInt(roundNumber),
+          scores: playerScores,
+          phaseCompletions,
+        });
+      } else {
+        await updateRound.mutateAsync({
+          gameId: savedSessionId,
+          roundNumber: BigInt(roundNumber),
+          scores: playerScores,
+        });
+      }
+    }
+
+    setEditingRound(null);
   };
 
   const handleEditRound = (roundNumber: number) => {
-    const round = localSession.rounds.find((r) => r.roundNumber === roundNumber);
+    const round = localSession.rounds.find(r => r.roundNumber === roundNumber);
     if (round) {
       setEditingRound(round);
     }
   };
 
-  const getPlayerPhase = (playerId: string): number => {
-    if (!localSession.phase10Progress) return 1;
-    const phase = localSession.phase10Progress.get(playerId) || 1;
-    return Math.max(1, Math.min(10, phase));
-  };
-
-  // Sort players for Phase 10 score entry using the same logic as standings
-  const getSortedPlayers = (): SessionPlayer[] => {
-    if (localSession.gameType !== 'phase10') {
-      return localSession.players;
-    }
-
-    const playersCopy = [...localSession.players];
-    playersCopy.sort((a, b) => {
-      const playerIdA = typeof a.id === 'bigint' ? a.id.toString() : a.id;
-      const playerIdB = typeof b.id === 'bigint' ? b.id.toString() : b.id;
-      
-      const phaseA = localSession.phase10Progress?.get(playerIdA) || 1;
-      const phaseB = localSession.phase10Progress?.get(playerIdB) || 1;
-      
-      // Higher phase first
-      if (phaseB !== phaseA) {
-        return phaseB - phaseA;
-      }
-      
-      // Calculate total scores
-      const totalA = localSession.rounds.reduce((sum, round) => {
-        return sum + (round.scores.get(playerIdA) || 0);
-      }, 0);
-      const totalB = localSession.rounds.reduce((sum, round) => {
-        return sum + (round.scores.get(playerIdB) || 0);
-      }, 0);
-      
-      // Lower score wins
-      if (totalA !== totalB) {
-        return totalA - totalB;
-      }
-      
-      // Deterministic tie-break by playerId
-      return playerIdA.localeCompare(playerIdB);
-    });
-
-    return playersCopy;
-  };
-
   const renderScoreEntry = () => {
-    if (localSession.gameType === 'skyjo') {
-      return (
-        <SkyjoScoreEntry
-          key={resetNonce}
-          players={localSession.players}
-          onSubmit={(scores, state) => handleAddRound(scores, { type: 'skyjo', state })}
-        />
-      );
-    } else if (localSession.gameType === 'milleBornes') {
-      return (
-        <MilleBornesScoreEntry
-          key={resetNonce}
-          players={localSession.players}
-          onSubmit={(scores, state) => handleAddRound(scores, { type: 'milleBornes', state })}
-        />
-      );
-    } else if (localSession.gameType === 'nerts') {
-      return (
-        <NertsScoreEntry
-          key={resetNonce}
-          players={localSession.players}
-          onSubmit={(scores, state) => handleAddRound(scores, { type: 'nerts', state })}
-        />
-      );
-    } else if (localSession.gameType === 'flip7') {
-      return (
-        <Flip7ScoreEntry
-          key={resetNonce}
-          players={localSession.players}
-          onSubmit={(scores, state) => handleAddRound(scores, { type: 'flip7', state })}
-        />
-      );
-    } else if (localSession.gameType === 'phase10') {
-      const sortedPlayers = getSortedPlayers();
-      return (
-        <Phase10ScoreEntry
-          key={resetNonce}
-          players={sortedPlayers}
-          onSubmit={(scores, state) => handleAddPhase10Round(scores, { type: 'phase10', state })}
-          phase10Progress={localSession.phase10Progress}
-          currentUserPrincipal={identity?.getPrincipal().toString()}
-          isSubmitting={isSubmittingRound}
-          compactCheckboxLayout={true}
-        />
-      );
-    } else if (localSession.gameType === 'genericGame') {
-      return (
-        <GenericGameScoreEntry
-          key={resetNonce}
-          players={localSession.players}
-          onSubmit={(scores, state) => handleAddRound(scores, { type: 'genericGame', state })}
-        />
-      );
+    const activeAnimalIds = localSession.activeSpiritsAnimalIds || [BigInt(0)];
+    const isOwlActive = activeAnimalIds.some(id => id === BigInt(0));
+
+    const wrapSubmit = (handler: (scores: Map<string, number>, state: any) => void) => {
+      return (scores: Map<string, number>, state: any) => {
+        const entryState: RoundEntryState = {
+          type: localSession.gameType as any,
+          state,
+        };
+        handler(scores, entryState);
+      };
+    };
+
+    switch (localSession.gameType) {
+      case 'skyjo':
+        return <SkyjoScoreEntry players={localSession.players} onSubmit={wrapSubmit(handleAddRound)} />;
+      case 'milleBornes':
+        return <MilleBornesScoreEntry players={localSession.players} onSubmit={wrapSubmit(handleAddRound)} />;
+      case 'nerts':
+        return <NertsScoreEntry players={localSession.players} onSubmit={wrapSubmit(handleAddRound)} />;
+      case 'flip7':
+        return <Flip7ScoreEntry players={localSession.players} onSubmit={wrapSubmit(handleAddRound)} />;
+      case 'phase10':
+        return (
+          <Phase10ScoreEntry
+            players={localSession.players}
+            phase10Progress={localSession.phase10Progress}
+            onSubmit={wrapSubmit(handleAddRound)}
+            oneWayCheckbox={!isQuickSession}
+          />
+        );
+      case 'genericGame':
+        return <GenericGameScoreEntry players={localSession.players} onSubmit={wrapSubmit(handleAddRound)} />;
+      case 'spiritsOwl':
+        if (activeAnimalIds.length === 0) {
+          return (
+            <Card>
+              <CardContent className="py-8">
+                <p className="text-center text-muted-foreground">
+                  No character boards selected. Please select at least one board to continue.
+                </p>
+              </CardContent>
+            </Card>
+          );
+        }
+        return (
+          <div className="space-y-4">
+            {isOwlActive && (
+              <SpiritsOwlScoreEntry players={localSession.players} onSubmit={wrapSubmit(handleAddRound)} />
+            )}
+          </div>
+        );
+      default:
+        return null;
     }
-    return null;
   };
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-4xl">
-      <div className="mb-6">
-        <Button variant="ghost" onClick={() => navigate({ to: '/' })} className="mb-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
+    <div className="max-w-4xl mx-auto space-y-6">
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="sm" onClick={() => navigate({ to: '/' })}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
           Back to Games
         </Button>
-        <h1 className="text-3xl font-bold">{template.name}</h1>
-        <p className="text-muted-foreground mt-1">
-          {isQuickSession ? 'Quick Game' : `Session #${sessionId}`}
-        </p>
       </div>
 
-      {gameEnd.isEnded && (
-        <Card className="mb-6 border-primary bg-primary/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-primary">
-              <Trophy className="h-5 w-5" />
-              Game Over!
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-lg font-semibold">
-              {gameEnd.winners.length === 1
-                ? `${gameEnd.winners[0].playerName} wins!`
-                : `Tie between: ${gameEnd.winners.map((w) => w.playerName).join(', ')}`}
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      <div className="flex items-center gap-3">
+        <span className="text-4xl">{template.icon}</span>
+        <div className="flex-1">
+          <h1 className="text-3xl font-semibold tracking-tight">{template.name}</h1>
+          <p className="text-sm text-muted-foreground">
+            {localSession.players.length} player{localSession.players.length !== 1 ? 's' : ''} •{' '}
+            {localSession.rounds.length} round{localSession.rounds.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+      </div>
 
-      <Card className="mb-6">
+      <Separator />
+
+      <Card>
         <CardHeader>
-          <CardTitle>Standings</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            <Trophy className="h-5 w-5" />
+            Standings
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-3">
+          <div className="space-y-2">
             {standings.map((standing, index) => (
-              <div key={standing.playerId} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div
+                key={standing.playerId}
+                className={`flex items-center justify-between p-3 rounded-lg ${
+                  index === 0 && gameEnded ? 'bg-primary/10 border border-primary/20' : 'bg-accent'
+                }`}
+              >
                 <div className="flex items-center gap-3">
-                  <span className="text-lg font-bold text-muted-foreground w-6">#{index + 1}</span>
+                  <span className="text-lg font-semibold text-muted-foreground w-6">
+                    {index + 1}
+                  </span>
                   <div>
-                    <p className="font-semibold">{standing.playerName}</p>
-                    {localSession.gameType === 'phase10' && (
-                      <p className="text-sm text-muted-foreground">
-                        Phase {getPlayerPhase(standing.playerId)}
+                    <p className="font-medium">{standing.playerName}</p>
+                    {localSession.gameType === 'phase10' && localSession.phase10Progress && (
+                      <p className="text-xs text-muted-foreground">
+                        Phase {localSession.phase10Progress.get(standing.playerId) || 1}
                       </p>
                     )}
                   </div>
                 </div>
-                <span className="text-xl font-bold">{standing.total}</span>
+                <div className="text-right">
+                  <p className="text-2xl font-bold">{standing.total}</p>
+                  {index === 0 && gameEnded && (
+                    <p className="text-xs text-primary font-medium">Winner!</p>
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -409,9 +364,9 @@ export default function ScoreSheetScreen() {
       </Card>
 
       {localSession.rounds.length > 0 && (
-        <Card className="mb-6">
+        <Card>
           <CardHeader>
-            <CardTitle>Rounds</CardTitle>
+            <CardTitle>Round History</CardTitle>
           </CardHeader>
           <CardContent>
             <RoundsTable
@@ -423,32 +378,38 @@ export default function ScoreSheetScreen() {
         </Card>
       )}
 
-      {!gameEnd.isEnded && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center justify-between">
-              <span>
-                {isAddingRound
-                  ? `Round ${localSession.rounds.length + 1}`
-                  : 'Add New Round'}
-              </span>
-              {!isAddingRound && (
-                <Button onClick={() => setIsAddingRound(true)} size="sm">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Add Round
+      {!gameEnded && (
+        <>
+          {!showScoreEntry ? (
+            <Button onClick={() => setShowScoreEntry(true)} size="lg" className="w-full">
+              <Plus className="h-5 w-5 mr-2" />
+              Add Round {localSession.rounds.length + 1}
+            </Button>
+          ) : (
+            <Card>
+              <CardHeader>
+                <CardTitle>Round {localSession.rounds.length + 1}</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {renderScoreEntry()}
+                <Button variant="outline" onClick={() => setShowScoreEntry(false)} className="w-full">
+                  Cancel
                 </Button>
-              )}
-            </CardTitle>
-          </CardHeader>
-          {isAddingRound && (
-            <CardContent>
-              {renderScoreEntry()}
-              <Separator className="my-4" />
-              <Button variant="outline" onClick={handleCancelAddRound} className="w-full">
-                Cancel
-              </Button>
-            </CardContent>
+              </CardContent>
+            </Card>
           )}
+        </>
+      )}
+
+      {gameEnded && (
+        <Card className="border-primary/50 bg-primary/5">
+          <CardContent className="py-6 text-center">
+            <Trophy className="h-12 w-12 mx-auto mb-3 text-primary" />
+            <h2 className="text-2xl font-bold mb-2">Game Over!</h2>
+            <p className="text-muted-foreground">
+              Congratulations to {standings[0]?.playerName} for winning!
+            </p>
+          </CardContent>
         </Card>
       )}
 
@@ -457,10 +418,10 @@ export default function ScoreSheetScreen() {
           round={editingRound}
           players={localSession.players}
           gameType={localSession.gameType}
-          onSave={handleUpdateRound}
-          onClose={() => setEditingRound(null)}
           phase10Progress={localSession.phase10Progress}
-          currentUserPrincipal={identity?.getPrincipal().toString()}
+          activeSpiritsAnimalIds={localSession.activeSpiritsAnimalIds}
+          onSave={handleUpdateRound}
+          onCancel={() => setEditingRound(null)}
         />
       )}
     </div>

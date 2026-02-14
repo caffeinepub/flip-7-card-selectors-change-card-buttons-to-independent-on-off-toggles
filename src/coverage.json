@@ -1,64 +1,88 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T20:49:03.590Z",
+  "generatedAt": "2026-02-14T01:12:57.254Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 3,
+    "total": 5,
     "implemented": 3,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "On the Phase 10 score submission screen, allow the user to toggle the “phase complete” checkbox freely before submitting scores (checked and unchecked), with the default state unchecked for all players when starting a new round.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/screens/ScoreSheetScreen.tsx",
-          "frontend/src/components/scores/Phase10ScoreEntry.tsx"
-        ],
-        "matchedFiles": [
-          "frontend/src/screens/ScoreSheetScreen.tsx",
-          "frontend/src/components/scores/Phase10ScoreEntry.tsx"
-        ]
+        "summary": "Add a backend-stored animal/character catalog for Spirits of the Wild where each animal has a stable ID, a name, and an icon, and seed the catalog with at least one animal: Owl.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
       },
       {
         "id": "REQ-2",
-        "summary": "Ensure the Phase 10 phase-complete checkbox visually behaves like a standard checkbox: the checkmark is visible only when checked and not visible when unchecked.",
+        "summary": "Expose backend query API(s) to fetch the full list of animals/characters (including name + icon) for use on the setup screen.",
+        "status": "unknown",
+        "plannedFiles": [],
+        "matchedFiles": []
+      },
+      {
+        "id": "REQ-3",
+        "summary": "Persist selected active character board(s) for a Spirits of the Wild game session, so the selection made on the setup screen is stored and can be used when rendering scoring screens.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+          "frontend/src/lib/sessionTypes.ts",
+          "frontend/src/screens/SessionSetupScreen.tsx",
           "frontend/src/screens/ScoreSheetScreen.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+          "frontend/src/lib/sessionTypes.ts",
+          "frontend/src/screens/SessionSetupScreen.tsx",
           "frontend/src/screens/ScoreSheetScreen.tsx"
         ]
       },
       {
-        "id": "REQ-3",
-        "summary": "During Phase 10 score submission, only record/log a phase completion for a player if their phase-complete checkbox is checked at the moment the round is submitted; if unchecked at submission time, do not apply phase progression for that player.",
+        "id": "REQ-4",
+        "summary": "On the Spirits of the Wild setup screen, add a new section titled \"Character Board Selection\" directly below the existing player selection section, listing backend-fetched animals/characters with a checkbox next to each to mark that board active for the game.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/scores/Phase10ScoreEntry.tsx",
-          "frontend/src/screens/ScoreSheetScreen.tsx"
+          "frontend/src/hooks/useSpiritsOfTheWildAnimals.ts",
+          "frontend/src/screens/SessionSetupScreen.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/components/scores/Phase10ScoreEntry.tsx",
-          "frontend/src/screens/ScoreSheetScreen.tsx"
+          "frontend/src/hooks/useSpiritsOfTheWildAnimals.ts",
+          "frontend/src/screens/SessionSetupScreen.tsx"
+        ]
+      },
+      {
+        "id": "REQ-5",
+        "summary": "Update the scoring experience so that only the character board score entry UI for the selected (checked) board(s) is shown, and unselected boards do not appear at all during scoring.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/screens/ScoreSheetScreen.tsx",
+          "frontend/src/components/scores/EditRoundDialog.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/screens/ScoreSheetScreen.tsx",
+          "frontend/src/components/scores/EditRoundDialog.tsx"
         ]
       }
     ]
   },
   "changedFiles": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
-    "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+    "frontend/src/backend.ts",
+    "frontend/src/components/scores/EditRoundDialog.tsx",
+    "frontend/src/declarations/backend.did.d.ts",
+    "frontend/src/declarations/backend.did.js",
+    "frontend/src/hooks/useSpiritsOfTheWildAnimals.ts",
+    "frontend/src/lib/sessionTypes.ts",
     "frontend/src/screens/ScoreSheetScreen.tsx",
+    "frontend/src/screens/SessionSetupScreen.tsx",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

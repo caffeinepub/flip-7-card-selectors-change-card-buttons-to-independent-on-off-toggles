@@ -87,6 +87,11 @@ export interface SkyjoRules {
   'rulesSummary' : string,
   'gameEndCondition' : string,
 }
+export interface SpiritsOfTheWildAnimal {
+  'id' : bigint,
+  'icon' : string,
+  'name' : string,
+}
 export interface UserProfile { 'name' : string, 'email' : [] | [string] }
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
@@ -107,9 +112,15 @@ export interface _SERVICE {
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getGameSession' : ActorMethod<[bigint], GameSession>,
   'getPlayerProfile' : ActorMethod<[bigint], PlayerProfile>,
+  'getSpiritsOfTheWildAnimals' : ActorMethod<[], Array<SpiritsOfTheWildAnimal>>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'selectSpiritsOfTheWildAnimal' : ActorMethod<
+    [bigint, bigint, bigint],
+    undefined
+  >,
+  'setActiveSpiritsOfTheWildAnimals' : ActorMethod<[Array<bigint>], undefined>,
   'submitPhase10Round' : ActorMethod<
     [bigint, bigint, Array<PlayerScore>, Array<Phase10Completion>],
     undefined

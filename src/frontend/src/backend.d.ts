@@ -63,6 +63,11 @@ export interface Phase10Completion {
     playerId: bigint;
     completed: boolean;
 }
+export interface SpiritsOfTheWildAnimal {
+    id: bigint;
+    icon: string;
+    name: string;
+}
 export interface SkyjoRules {
     scoringMethod: ScoringMethod;
     rulesSummary: string;
@@ -126,9 +131,12 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole>;
     getGameSession(gameId: bigint): Promise<GameSession>;
     getPlayerProfile(profileId: bigint): Promise<PlayerProfile>;
+    getSpiritsOfTheWildAnimals(): Promise<Array<SpiritsOfTheWildAnimal>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    selectSpiritsOfTheWildAnimal(gameId: bigint, playerId: bigint, animalId: bigint): Promise<void>;
+    setActiveSpiritsOfTheWildAnimals(animalIds: Array<bigint>): Promise<void>;
     submitPhase10Round(gameId: bigint, roundNumber: bigint, scores: Array<PlayerScore>, phaseCompletions: Array<Phase10Completion>): Promise<void>;
     updateRound(gameId: bigint, roundNumber: bigint, scores: Array<PlayerScore>): Promise<void>;
 }

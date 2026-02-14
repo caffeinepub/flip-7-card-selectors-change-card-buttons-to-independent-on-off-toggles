@@ -14,7 +14,7 @@ export interface GameEndResult {
 export function getStandings(
   rounds: LocalRound[],
   players: SessionPlayer[],
-  gameType: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'phase10' | 'genericGame',
+  gameType: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'phase10' | 'genericGame' | 'spiritsOwl',
   phase10Progress?: Map<string, number>
 ): PlayerStanding[] {
   const totals = new Map<string, number>();
@@ -59,7 +59,7 @@ export function getStandings(
       // Deterministic tie-break by playerId
       return a.playerId.localeCompare(b.playerId);
     });
-  } else if (gameType === 'flip7' || gameType === 'nerts' || gameType === 'milleBornes') {
+  } else if (gameType === 'flip7' || gameType === 'nerts' || gameType === 'milleBornes' || gameType === 'spiritsOwl') {
     standings.sort((a, b) => b.total - a.total);
   } else {
     standings.sort((a, b) => a.total - b.total);
@@ -70,7 +70,7 @@ export function getStandings(
 
 export function checkGameEnd(
   standings: PlayerStanding[],
-  gameType: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'phase10' | 'genericGame',
+  gameType: 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'phase10' | 'genericGame' | 'spiritsOwl',
   nertsWinTarget?: number,
   flip7TargetScore?: number,
   phase10WinTarget?: number

@@ -1,12 +1,13 @@
 # Specification
 
 ## Summary
-**Goal:** Fix Phase 10 “phase complete” checkbox behavior so it can be toggled freely, displays correctly, and only affects phase progression when checked at submission time.
+**Goal:** Store Spirits of the Wild character boards (name + icon) on the backend and let players select which character board(s) are active, showing only those during scoring.
 
 **Planned changes:**
-- Ensure each player’s “phase complete” checkbox defaults to unchecked when starting a new Phase 10 round entry from ScoreSheetScreen.
-- Fix checkbox interaction so users can check and uncheck freely before pressing “Submit Score” (no lock-in).
-- Ensure checkbox visuals match standard behavior (check indicator only visible when checked).
-- Update submission logic so phase completion/progression is recorded only for players whose checkbox is checked at the moment of submission (for both saved sessions via backend and quick/local sessions).
+- Add a backend-stored animal/character catalog with stable IDs, name, and icon, seeded with at least Owl.
+- Expose a backend query API to fetch the full animal/character list (id, name, icon) via generated types.
+- Persist selected active character board ID(s) in saved game sessions and return them when loading sessions (with sensible handling for older sessions missing this data).
+- Update the Spirits of the Wild setup screen to add a “Character Board Selection” section (below player selection) that lists backend-fetched animals with icon, name, and a checkbox.
+- Update scoring so only selected character board score entry UI is shown (e.g., Owl uses existing SpiritsOwlScoreEntry), and prompt/apply a default when none are selected.
 
-**User-visible outcome:** On the Phase 10 score submission screen, users can toggle “phase complete” on/off per player before submitting, the checkmark displays correctly, and only checked players advance/log phase completion when scores are submitted.
+**User-visible outcome:** On the setup screen, players can choose which character board(s) to use from a backend-provided list, and during scoring only the selected board(s) appear; saved sessions remember the selection.

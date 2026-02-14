@@ -1,150 +1,415 @@
 import Map "mo:core/Map";
 import Nat "mo:core/Nat";
+
+import AccessControl "authorization/access-control";
 import Principal "mo:core/Principal";
 
 module {
-  type ScoringMethod = {
-    #roundBased;
-    #endOfGame;
+  type SpiritsOfTheWildAnimal = {
+    id : Nat;
+    name : Text;
+    icon : Text;
   };
 
-  type SkyjoRules = {
-    rulesSummary : Text;
-    gameEndCondition : Text;
-    scoringMethod : ScoringMethod;
-  };
-
-  type MilleBornesRules = {
-    rulesSummary : Text;
-    gameEndCondition : Text;
-    scoringMethod : ScoringMethod;
-  };
-
-  type NertsRules = {
-    rulesSummary : Text;
-    gameEndCondition : Text;
-    scoringMethod : ScoringMethod;
-    scoringDetails : Text;
-    winTarget : Nat;
-  };
-
-  type OldGameType = {
-    #skyjo : SkyjoRules;
-    #milleBornes : MilleBornesRules;
-    #nerts : NertsRules;
-    #flip7 : {
+  type OldActor = {
+    accessControlState : AccessControl.AccessControlState;
+    skyjoRules : {
       rulesSummary : Text;
       gameEndCondition : Text;
-      scoringMethod : ScoringMethod;
-      targetScore : Nat;
+      scoringMethod : {
+        #roundBased;
+        #endOfGame;
+      };
     };
-  };
-
-  type GenericGameRules = {
-    rulesSummary : Text;
-    gameEndCondition : Text;
-    scoringMethod : ScoringMethod;
-  };
-
-  type GameType = {
-    #skyjo : SkyjoRules;
-    #milleBornes : MilleBornesRules;
-    #nerts : NertsRules;
-    #flip7 : {
+    milleBornesRules : {
       rulesSummary : Text;
       gameEndCondition : Text;
-      scoringMethod : ScoringMethod;
+      scoringMethod : {
+        #roundBased;
+        #endOfGame;
+      };
+    };
+    nertsRules : {
+      rulesSummary : Text;
+      gameEndCondition : Text;
+      scoringMethod : {
+        #roundBased;
+        #endOfGame;
+      };
+      scoringDetails : Text;
+      winTarget : Nat;
+    };
+    phase10Rules : {
+      rulesSummary : Text;
+      gameEndCondition : Text;
+      scoringMethod : {
+        #roundBased;
+        #endOfGame;
+      };
+      scoringDetails : Text;
+      winTarget : Nat;
+    };
+    flip7Rules : {
+      rulesSummary : Text;
+      gameEndCondition : Text;
+      scoringMethod : {
+        #roundBased;
+        #endOfGame;
+      };
       targetScore : Nat;
     };
-    #genericGame : GenericGameRules;
-  };
-
-  module GameSession {
-    public type Fields = {
+    genericGameRules : {
+      rulesSummary : Text;
+      gameEndCondition : Text;
+      scoringMethod : {
+        #roundBased;
+        #endOfGame;
+      };
+    };
+    gameSessions : Map.Map<Nat, {
       id : Nat;
-      gameType : GameType;
-      players : [PlayerProfile.Fields];
-      rounds : [Round.Fields];
-      finalScores : ?[PlayerScore.Fields];
+      gameType : {
+        #skyjo : {
+          rulesSummary : Text;
+          gameEndCondition : Text;
+          scoringMethod : {
+            #roundBased;
+            #endOfGame;
+          };
+        };
+        #milleBornes : {
+          rulesSummary : Text;
+          gameEndCondition : Text;
+          scoringMethod : {
+            #roundBased;
+            #endOfGame;
+          };
+        };
+        #nerts : {
+          rulesSummary : Text;
+          gameEndCondition : Text;
+          scoringMethod : {
+            #roundBased;
+            #endOfGame;
+          };
+          scoringDetails : Text;
+          winTarget : Nat;
+        };
+        #flip7 : {
+          rulesSummary : Text;
+          gameEndCondition : Text;
+          scoringMethod : {
+            #roundBased;
+            #endOfGame;
+          };
+          targetScore : Nat;
+        };
+        #phase10 : {
+          rulesSummary : Text;
+          gameEndCondition : Text;
+          scoringMethod : {
+            #roundBased;
+            #endOfGame;
+          };
+          scoringDetails : Text;
+          winTarget : Nat;
+        };
+        #genericGame : {
+          rulesSummary : Text;
+          gameEndCondition : Text;
+          scoringMethod : {
+            #roundBased;
+            #endOfGame;
+          };
+        };
+      };
+      players : [{
+        id : Nat;
+        name : Text;
+        gamesPlayed : Nat;
+        wins : Nat;
+        averageScore : Nat;
+        totalScore : Nat;
+        owner : Principal.Principal;
+      }];
+      rounds : [{
+        roundNumber : Nat;
+        playerScores : [{
+          playerId : Nat;
+          score : Nat;
+        }];
+      }];
+      finalScores : ?[{
+        playerId : Nat;
+        score : Nat;
+      }];
       createdAt : Int;
       isActive : Bool;
-      owner : Principal;
+      owner : Principal.Principal;
       nertsWinTarget : ?Nat;
       flip7TargetScore : ?Nat;
-    };
-  };
-
-  module OldGameSession {
-    public type Fields = {
-      id : Nat;
-      gameType : OldGameType;
-      players : [PlayerProfile.Fields];
-      rounds : [Round.Fields];
-      finalScores : ?[PlayerScore.Fields];
-      createdAt : Int;
-      isActive : Bool;
-      owner : Principal;
-      nertsWinTarget : ?Nat;
-      flip7TargetScore : ?Nat;
-    };
-  };
-
-  module PlayerProfile {
-    public type Fields = {
+      phase10WinTarget : ?Nat;
+      phase10Progress : ?[{
+        playerId : Nat;
+        currentPhase : Nat;
+      }];
+    }>;
+    playerProfiles : Map.Map<Nat, {
       id : Nat;
       name : Text;
       gamesPlayed : Nat;
       wins : Nat;
       averageScore : Nat;
       totalScore : Nat;
-      owner : Principal;
-    };
-  };
-
-  module Round {
-    public type Fields = {
-      roundNumber : Nat;
-      playerScores : [PlayerScore.Fields];
-    };
-  };
-
-  module PlayerScore {
-    public type Fields = {
-      playerId : Nat;
-      score : Nat;
-    };
-  };
-
-  public type UserProfile = {
-    name : Text;
-    email : ?Text;
-  };
-
-  type OldActor = {
-    gameSessions : Map.Map<Nat, OldGameSession.Fields>;
-    playerProfiles : Map.Map<Nat, PlayerProfile.Fields>;
-    userProfiles : Map.Map<Principal, UserProfile>;
+      owner : Principal.Principal;
+    }>;
+    userProfiles : Map.Map<Principal.Principal, {
+      name : Text;
+      email : ?Text;
+    }>;
     nextGameId : Nat;
     nextUserId : Nat;
   };
 
-  type Actor = {
-    gameSessions : Map.Map<Nat, GameSession.Fields>;
-    playerProfiles : Map.Map<Nat, PlayerProfile.Fields>;
-    userProfiles : Map.Map<Principal, UserProfile>;
+  type NewActor = {
+    accessControlState : AccessControl.AccessControlState;
+    skyjoRules : {
+      rulesSummary : Text;
+      gameEndCondition : Text;
+      scoringMethod : {
+        #roundBased;
+        #endOfGame;
+      };
+    };
+    milleBornesRules : {
+      rulesSummary : Text;
+      gameEndCondition : Text;
+      scoringMethod : {
+        #roundBased;
+        #endOfGame;
+      };
+    };
+    nertsRules : {
+      rulesSummary : Text;
+      gameEndCondition : Text;
+      scoringMethod : {
+        #roundBased;
+        #endOfGame;
+      };
+      scoringDetails : Text;
+      winTarget : Nat;
+    };
+    phase10Rules : {
+      rulesSummary : Text;
+      gameEndCondition : Text;
+      scoringMethod : {
+        #roundBased;
+        #endOfGame;
+      };
+      scoringDetails : Text;
+      winTarget : Nat;
+    };
+    flip7Rules : {
+      rulesSummary : Text;
+      gameEndCondition : Text;
+      scoringMethod : {
+        #roundBased;
+        #endOfGame;
+      };
+      targetScore : Nat;
+    };
+    genericGameRules : {
+      rulesSummary : Text;
+      gameEndCondition : Text;
+      scoringMethod : {
+        #roundBased;
+        #endOfGame;
+      };
+    };
+    gameSessions : Map.Map<Nat, {
+      id : Nat;
+      gameType : {
+        #skyjo : {
+          rulesSummary : Text;
+          gameEndCondition : Text;
+          scoringMethod : {
+            #roundBased;
+            #endOfGame;
+          };
+        };
+        #milleBornes : {
+          rulesSummary : Text;
+          gameEndCondition : Text;
+          scoringMethod : {
+            #roundBased;
+            #endOfGame;
+          };
+        };
+        #nerts : {
+          rulesSummary : Text;
+          gameEndCondition : Text;
+          scoringMethod : {
+            #roundBased;
+            #endOfGame;
+          };
+          scoringDetails : Text;
+          winTarget : Nat;
+        };
+        #flip7 : {
+          rulesSummary : Text;
+          gameEndCondition : Text;
+          scoringMethod : {
+            #roundBased;
+            #endOfGame;
+          };
+          targetScore : Nat;
+        };
+        #phase10 : {
+          rulesSummary : Text;
+          gameEndCondition : Text;
+          scoringMethod : {
+            #roundBased;
+            #endOfGame;
+          };
+          scoringDetails : Text;
+          winTarget : Nat;
+        };
+        #genericGame : {
+          rulesSummary : Text;
+          gameEndCondition : Text;
+          scoringMethod : {
+            #roundBased;
+            #endOfGame;
+          };
+        };
+      };
+      players : [{
+        id : Nat;
+        name : Text;
+        gamesPlayed : Nat;
+        wins : Nat;
+        averageScore : Nat;
+        totalScore : Nat;
+        owner : Principal.Principal;
+      }];
+      rounds : [{
+        roundNumber : Nat;
+        playerScores : [{
+          playerId : Nat;
+          score : Nat;
+        }];
+      }];
+      finalScores : ?[{
+        playerId : Nat;
+        score : Nat;
+      }];
+      createdAt : Int;
+      isActive : Bool;
+      owner : Principal.Principal;
+      nertsWinTarget : ?Nat;
+      flip7TargetScore : ?Nat;
+      phase10WinTarget : ?Nat;
+      phase10Progress : ?[{
+        playerId : Nat;
+        currentPhase : Nat;
+      }];
+    }>;
+    playerProfiles : Map.Map<Nat, {
+      id : Nat;
+      name : Text;
+      gamesPlayed : Nat;
+      wins : Nat;
+      averageScore : Nat;
+      totalScore : Nat;
+      owner : Principal.Principal;
+    }>;
+    userProfiles : Map.Map<Principal.Principal, {
+      name : Text;
+      email : ?Text;
+    }>;
     nextGameId : Nat;
     nextUserId : Nat;
+    spiritsOfTheWildAnimals : Map.Map<Nat, SpiritsOfTheWildAnimal>;
+    spiritsOfTheWildAnimalPlayers : Map.Map<Nat, [Nat]>;
   };
 
-  public func run(old : OldActor) : Actor {
+  public func run(old : OldActor) : NewActor {
     {
-      gameSessions = old.gameSessions.map<Nat, OldGameSession.Fields, GameSession.Fields>(
-        func(_id, oldGame) { oldGame }
-      );
+      accessControlState = old.accessControlState;
+      skyjoRules = old.skyjoRules;
+      milleBornesRules = old.milleBornesRules;
+      nertsRules = old.nertsRules;
+      phase10Rules = old.phase10Rules;
+      flip7Rules = old.flip7Rules;
+      genericGameRules = old.genericGameRules;
+      gameSessions = old.gameSessions;
       playerProfiles = old.playerProfiles;
       userProfiles = old.userProfiles;
       nextGameId = old.nextGameId;
       nextUserId = old.nextUserId;
+      spiritsOfTheWildAnimals = initializeAnimals();
+      spiritsOfTheWildAnimalPlayers = Map.empty<Nat, [Nat]>();
     };
+  };
+
+  func initializeAnimals() : Map.Map<Nat, SpiritsOfTheWildAnimal> {
+    let animalMap = Map.empty<Nat, SpiritsOfTheWildAnimal>();
+    animalMap.add(
+      0,
+      {
+        id = 0;
+        name = "Spirit Owl";
+        icon = "🦉";
+      },
+    );
+    animalMap.add(
+      1,
+      {
+        id = 1;
+        name = "Spirit Wolf";
+        icon = "🐺";
+      },
+    );
+    animalMap.add(
+      2,
+      {
+        id = 2;
+        name = "Spirit Raven";
+        icon = "🐦";
+      },
+    );
+    animalMap.add(
+      3,
+      {
+        id = 3;
+        name = "Spirit Fox";
+        icon = "🦊";
+      },
+    );
+    animalMap.add(
+      4,
+      {
+        id = 4;
+        name = "Spirit Bear";
+        icon = "🐻";
+      },
+    );
+    animalMap.add(
+      5,
+      {
+        id = 5;
+        name = "Spirit Rabbit";
+        icon = "🐇";
+      },
+    );
+    animalMap.add(
+      6,
+      {
+        id = 6;
+        name = "Spirit Turtle";
+        icon = "🐢";
+      },
+    );
+    animalMap;
   };
 };

@@ -1,32 +1,35 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Phase 10 score submission flow enhancements",
-  "architectural_notes": [],
+  "summary": "Spirits of The Wild: add support for selecting active character boards during game setup, backed by a backend-stored animal catalog (name + icon), and show only selected boards during scoring.",
+  "architectural_notes": [
+    "Animals/characters list must be stored on the backend (not hardcoded) and include at minimum: id, name, icon.",
+    "Score entry UI should display only boards selected as active during setup; unselected boards must not be shown."
+  ],
   "known_issues": [],
   "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-on-the-phase-10-score-submission-screen-allow-the-user-to-toggle-the-phase-complete-checkbox-freely-before-submitting-scores-checked-and-unchecked-with-the-default-state-unchecked-for-all-players-when-starting-a-new-round",
-      "title": "On the Phase 10 score submission screen, allow the user to toggle the “phase complete” checkbox freely before submitting scores (checked and unchecked), with the default state unchecked for all players when starting a new round.",
-      "reqIds": [
-        "REQ-1"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-ensure-the-phase-10-phase-complete-checkbox-visually-behaves-like-a-standard-checkbox-the-checkmark-is-visible-only-when-checked-and-not-visible-when-unchecked",
-      "title": "Ensure the Phase 10 phase-complete checkbox visually behaves like a standard checkbox: the checkmark is visible only when checked and not visible when unchecked.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-during-phase-10-score-submission-only-record-log-a-phase-completion-for-a-player-if-their-phase-complete-checkbox-is-checked-at-the-moment-the-round-is-submitted-if-unchecked-at-submission-time-do-not-apply-phase-progression-for-that-player",
-      "title": "During Phase 10 score submission, only record/log a phase completion for a player if their phase-complete checkbox is checked at the moment the round is submitted; if unchecked at submission time, do not apply phase progression for that player.",
+      "id": "feature-persist-selected-active-character-board-s-for-a-spirits-of-the-wild-game-session-so-the-selection-made-on-the-setup-screen-is-stored-and-can-be-used-when-rendering-scoring-screens",
+      "title": "Persist selected active character board(s) for a Spirits of the Wild game session, so the selection made on the setup screen is stored and can be used when rendering scoring screens.",
       "reqIds": [
         "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-on-the-spirits-of-the-wild-setup-screen-add-a-new-section-titled-character-board-selection-directly-below-the-existing-player-selection-section-listing-backend-fetched-animals-characters-with-a-checkbox-next-to-each-to-mark-that-board-active-for-the-game",
+      "title": "On the Spirits of the Wild setup screen, add a new section titled \"Character Board Selection\" directly below the existing player selection section, listing backend-fetched animals/characters with a checkbox next to each to mark that board active for the game.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-scoring-experience-so-that-only-the-character-board-score-entry-ui-for-the-selected-checked-board-s-is-shown-and-unselected-boards-do-not-appear-at-all-during-scoring",
+      "title": "Update the scoring experience so that only the character board score entry UI for the selected (checked) board(s) is shown, and unselected boards do not appear at all during scoring.",
+      "reqIds": [
+        "REQ-5"
       ],
       "version": 1
     }
@@ -34,12 +37,34 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Phase 10 score submission: phase-complete checkbox defaults unchecked; user can toggle before submitting; only log phase completion if checked at submission time",
+      "summary": "Add 'Character Board Selection' section on setup screen (below player selection) with checkboxes for backend-stored animals; only selected boards appear on score entry screen.",
       "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Create/extend backend model and API for animals/characters including at least name and icon (currently Owl) to support adding new characters later.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Add a backend-stored animal/character catalog for Spirits of the Wild where each animal has a stable ID, a name, and an icon, and seed the catalog with at least one animal: Owl.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Expose backend query API(s) to fetch the full list of animals/characters (including name + icon) for use on the setup screen.",
+      "reqIds": [
+        "REQ-2"
+      ],
       "status": "pending"
     }
   ],
-  "projectName": "Fix Phase 10 phase-complete checkbox toggle and logging on score submission",
+  "projectName": "Spirits of The Wild",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

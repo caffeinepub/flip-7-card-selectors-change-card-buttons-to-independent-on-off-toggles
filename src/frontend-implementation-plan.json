@@ -1,69 +1,75 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Phase 10 checkbox toggle + submission completion handling (frontend)",
+  "title": "Spirits of the Wild character board selection (frontend wiring + scoring filtering)",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Allow Phase 10 “phase complete” checkboxes to toggle freely (default unchecked) when starting a new round entry from ScoreSheetScreen.",
-      "acceptanceCriteria": [
-        "When starting a new Phase 10 round entry, each player's phase-complete checkbox is unchecked by default.",
-        "If a user checks a player's box and then unchecks it before pressing “Submit Score”, the checkbox returns to unchecked state (no UI lock-in).",
-        "This behavior applies for the Phase 10 score submission flow rendered from ScoreSheetScreen."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/screens/ScoreSheetScreen.tsx",
-          "operation": "modify",
-          "description": "Update the Phase10ScoreEntry wiring so the phase-complete checkbox is not locked into a one-way (checked-only) behavior for new round entry (i.e., stop enabling the oneWayCheckbox behavior when rendering Phase10ScoreEntry from ScoreSheetScreen)."
-        },
-        {
-          "path": "frontend/src/components/scores/Phase10ScoreEntry.tsx",
-          "operation": "modify",
-          "description": "Ensure Phase 10 entry initialization keeps all players' phaseCompletions defaulted to false (unchecked) for new rounds, and that state updates always allow checked->unchecked transitions when oneWayCheckbox is not enabled."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Ensure Phase 10 phase-complete checkbox checkmark visibility matches a standard checkbox (visible only when checked).",
-      "acceptanceCriteria": [
-        "Toggling the checkbox to checked displays the check indicator.",
-        "Toggling the checkbox to unchecked hides the check indicator.",
-        "No custom styling causes the check indicator to remain visible when unchecked."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/scores/Phase10ScoreEntry.tsx",
-          "operation": "modify",
-          "description": "Keep the Checkbox as a fully-controlled component (checked is always a boolean derived from state; onCheckedChange always writes the boolean to state) so the UI reliably re-renders and the check indicator tracks the checked value."
-        },
-        {
-          "path": "frontend/src/screens/ScoreSheetScreen.tsx",
-          "operation": "modify",
-          "description": "Verify Phase10ScoreEntry is rendered without any props that prevent unchecked state from being represented, ensuring the visual indicator can clear when unchecked."
-        }
-      ]
-    },
-    {
       "id": "REQ-3",
-      "summary": "At Phase 10 submission time, only treat players as completing a phase if their checkbox is checked at that moment (affecting both local quick sessions and saved-session submission payload).",
+      "summary": "Persist selected Spirits of the Wild character board IDs in quick-session state and wire saved-session selection via backend calls/returned session data when available.",
       "acceptanceCriteria": [
-        "If a player’s checkbox is unchecked at submission time, the submitted payload and any derived updates do not treat that player as having completed a phase for that round.",
-        "If a player’s checkbox is checked at submission time, the submitted payload and any derived updates treat that player as having completed a phase for that round.",
-        "For saved sessions, the backend submission endpoint does not increment/update Phase 10 progress for any completion entries where completed=false.",
-        "For quick sessions (local-only), the local phase10Progress update logic does not increment phase for any players whose completion flag is false."
+        "When starting a non-quick (saved) session, the selected character board IDs are sent to the backend and stored with the created game session.",
+        "When loading a saved session, the stored active character board IDs are returned to the frontend as part of the session data.",
+        "Existing saved sessions created before this change still load successfully (missing selection defaults to an empty selection or a sensible default for Owl)."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+          "path": "frontend/src/lib/sessionTypes.ts",
           "operation": "modify",
-          "description": "When building the submitted Phase10EntryState in handleSubmit, snapshot the phaseCompletions map (e.g., clone it) so the submission reflects exactly what was checked/unchecked at click time."
+          "description": "Extend LocalSession to carry Spirits of the Wild active character board IDs (e.g., activeSpiritsAnimalIds?: bigint[]), so quick sessions and loaded sessions can share the same selection source."
+        },
+        {
+          "path": "frontend/src/screens/SessionSetupScreen.tsx",
+          "operation": "modify",
+          "description": "When starting a Spirits of the Wild game: include selected board IDs in quick session navigation state (so scoring can render only selected boards), and for saved sessions call the backend capability to persist active Spirits of the Wild animal IDs after session creation (then navigate). Keep behavior backward-compatible when selection is empty by applying a defined default (e.g., auto-select Owl)."
         },
         {
           "path": "frontend/src/screens/ScoreSheetScreen.tsx",
           "operation": "modify",
-          "description": "On Phase 10 submission, derive phase progression and the saved-session submission data strictly from the completion flags that are true at submission time (e.g., compute updatedProgress only from completed=true and send only completed=true entries in the phaseCompletions array to avoid any false completion records)."
+          "description": "When constructing localSession from a saved session, read the stored active character board IDs from the loaded session data if present (tolerate missing field for legacy sessions). Ensure localSession has a sensible default (e.g., Owl) when no selection is available."
+        }
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "summary": "Add a Spirits of the Wild “Character Board Selection” section on the setup screen populated from backend-fetched animals with checkbox selection and icon/name display.",
+      "acceptanceCriteria": [
+        "The setup screen displays a \"Character Board Selection\" section directly below the player selection UI.",
+        "The animals/characters shown come from the backend API (not a hardcoded list).",
+        "Each listed animal shows its icon and name and a checkbox reflecting selection state.",
+        "Starting the game includes the selected board IDs in the created session (or quick session state for quick games)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/hooks/useSpiritsOfTheWildAnimals.ts",
+          "operation": "create",
+          "description": "Create a React Query hook that fetches Spirits of the Wild animals via the backend actor’s getSpiritsOfTheWildAnimals call and exposes loading/error states for the setup screen."
+        },
+        {
+          "path": "frontend/src/screens/SessionSetupScreen.tsx",
+          "operation": "modify",
+          "description": "For the Spirits of the Wild template, render a \"Character Board Selection\" section directly below the existing player selection UI (in both profiles and quick tabs). Use the new useSpiritsOfTheWildAnimals hook to list backend-fetched animals and render each row with icon, name, and a Checkbox reflecting local selection state. Ensure selected IDs are used by the start-game logic. Do not hardcode the animal list."
+        }
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "summary": "Filter the Spirits of the Wild scoring UI so only selected character board score entry components render; show a clear prompt or apply a default when none selected.",
+      "acceptanceCriteria": [
+        "If only Owl is selected, only the Owl score entry UI is rendered (using the existing SpiritsOwlScoreEntry).",
+        "If multiple boards are selected, only those selected boards render (and no UI is rendered for unselected boards).",
+        "If no boards are selected, the UI clearly prompts the user to select at least one board (or applies a defined default) rather than silently showing all boards.",
+        "No unselected character board UI is visible anywhere on the score entry flow."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/screens/ScoreSheetScreen.tsx",
+          "operation": "modify",
+          "description": "Update Spirits of the Wild scoring rendering to consult localSession.activeSpiritsAnimalIds and render only the score entry components for selected boards. If none are selected, show a clear in-flow message prompting selection (or enforce the same default selection used at session creation). Ensure no unselected board UI is rendered during add-round flow."
+        },
+        {
+          "path": "frontend/src/components/scores/EditRoundDialog.tsx",
+          "operation": "modify",
+          "description": "Add support for an optional active Spirits of the Wild selection passed in from the score sheet, and apply the same filtering rules to the edit-round score entry UI so unselected boards never appear during editing."
         }
       ]
     }

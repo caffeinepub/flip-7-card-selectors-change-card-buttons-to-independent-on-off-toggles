@@ -48,13 +48,21 @@ export interface Phase10EntryState {
   phaseCompletions: Map<string, boolean>;
 }
 
+export interface SpiritsOwlEntryState {
+  pair1: Map<string, [boolean, boolean]>;
+  pair2: Map<string, [boolean, boolean]>;
+  pair3: Map<string, [boolean, boolean]>;
+  spiritStone: Map<string, boolean>;
+}
+
 export type RoundEntryState =
   | { type: 'skyjo'; state: SkyjoEntryState }
   | { type: 'milleBornes'; state: MilleBornesEntryState }
   | { type: 'nerts'; state: NertsEntryState }
   | { type: 'flip7'; state: Flip7EntryState }
   | { type: 'phase10'; state: Phase10EntryState }
-  | { type: 'genericGame'; state: GenericGameEntryState };
+  | { type: 'genericGame'; state: GenericGameEntryState }
+  | { type: 'spiritsOwl'; state: SpiritsOwlEntryState };
 
 export interface LocalRound {
   roundNumber: number;
@@ -62,7 +70,7 @@ export interface LocalRound {
   entryState?: RoundEntryState;
 }
 
-export type GameType = 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'phase10' | 'genericGame';
+export type GameType = 'skyjo' | 'milleBornes' | 'nerts' | 'flip7' | 'phase10' | 'genericGame' | 'spiritsOwl';
 
 export interface LocalSession {
   gameType: GameType;
@@ -74,4 +82,5 @@ export interface LocalSession {
   flip7TargetScore?: number;
   phase10WinTarget?: number;
   phase10Progress?: Map<string, number>;
+  activeSpiritsAnimalIds?: bigint[];
 }

@@ -145,6 +145,11 @@ export interface Phase10Completion {
     playerId: bigint;
     completed: boolean;
 }
+export interface SpiritsOfTheWildAnimal {
+    id: bigint;
+    icon: string;
+    name: string;
+}
 export interface SkyjoRules {
     scoringMethod: ScoringMethod;
     rulesSummary: string;
@@ -209,9 +214,12 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole>;
     getGameSession(gameId: bigint): Promise<GameSession>;
     getPlayerProfile(profileId: bigint): Promise<PlayerProfile>;
+    getSpiritsOfTheWildAnimals(): Promise<Array<SpiritsOfTheWildAnimal>>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    selectSpiritsOfTheWildAnimal(gameId: bigint, playerId: bigint, animalId: bigint): Promise<void>;
+    setActiveSpiritsOfTheWildAnimals(animalIds: Array<bigint>): Promise<void>;
     submitPhase10Round(gameId: bigint, roundNumber: bigint, scores: Array<PlayerScore>, phaseCompletions: Array<Phase10Completion>): Promise<void>;
     updateRound(gameId: bigint, roundNumber: bigint, scores: Array<PlayerScore>): Promise<void>;
 }
@@ -386,6 +394,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async getSpiritsOfTheWildAnimals(): Promise<Array<SpiritsOfTheWildAnimal>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getSpiritsOfTheWildAnimals();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getSpiritsOfTheWildAnimals();
+            return result;
+        }
+    }
     async getUserProfile(arg0: Principal): Promise<UserProfile | null> {
         if (this.processError) {
             try {
@@ -425,6 +447,34 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n42(this._uploadFile, this._downloadFile, arg0));
+            return result;
+        }
+    }
+    async selectSpiritsOfTheWildAnimal(arg0: bigint, arg1: bigint, arg2: bigint): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.selectSpiritsOfTheWildAnimal(arg0, arg1, arg2);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.selectSpiritsOfTheWildAnimal(arg0, arg1, arg2);
+            return result;
+        }
+    }
+    async setActiveSpiritsOfTheWildAnimals(arg0: Array<bigint>): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.setActiveSpiritsOfTheWildAnimals(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.setActiveSpiritsOfTheWildAnimals(arg0);
             return result;
         }
     }

@@ -2,51 +2,12 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-on-the-phase-10-score-submission-screen-allow-the-user-to-toggle-the-phase-complete-checkbox-freely-before-submitting-scores-checked-and-unchecked-with-the-default-state-unchecked-for-all-players-when-starting-a-new-round",
-      "featureTitle": "On the Phase 10 score submission screen, allow the user to toggle the “phase complete” checkbox freely before submitting scores (checked and unchecked), with the default state unchecked for all players when starting a new round.",
+      "featureId": "feature-persist-selected-active-character-board-s-for-a-spirits-of-the-wild-game-session-so-the-selection-made-on-the-setup-screen-is-stored-and-can-be-used-when-rendering-scoring-screens",
+      "featureTitle": "Persist selected active character board(s) for a Spirits of the Wild game session, so the selection made on the setup screen is stored and can be used when rendering scoring screens.",
       "files": [
-        "frontend/src/components/scores/Phase10ScoreEntry.tsx",
-        "frontend/src/screens/ScoreSheetScreen.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-the-phase-10-phase-complete-checkbox-visually-behaves-like-a-standard-checkbox-the-checkmark-is-visible-only-when-checked-and-not-visible-when-unchecked",
-      "featureTitle": "Ensure the Phase 10 phase-complete checkbox visually behaves like a standard checkbox: the checkmark is visible only when checked and not visible when unchecked.",
-      "files": [
-        "frontend/src/components/scores/Phase10ScoreEntry.tsx",
-        "frontend/src/screens/ScoreSheetScreen.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-during-phase-10-score-submission-only-record-log-a-phase-completion-for-a-player-if-their-phase-complete-checkbox-is-checked-at-the-moment-the-round-is-submitted-if-unchecked-at-submission-time-do-not-apply-phase-progression-for-that-player",
-      "featureTitle": "During Phase 10 score submission, only record/log a phase completion for a player if their phase-complete checkbox is checked at the moment the round is submitted; if unchecked at submission time, do not apply phase progression for that player.",
-      "files": [
-        "frontend/src/components/scores/Phase10ScoreEntry.tsx",
-        "frontend/src/screens/ScoreSheetScreen.tsx"
+        "frontend/src/lib/sessionTypes.ts",
+        "frontend/src/screens/ScoreSheetScreen.tsx",
+        "frontend/src/screens/SessionSetupScreen.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -58,6 +19,46 @@
       ],
       "testIds": [
         "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-on-the-spirits-of-the-wild-setup-screen-add-a-new-section-titled-character-board-selection-directly-below-the-existing-player-selection-section-listing-backend-fetched-animals-characters-with-a-checkbox-next-to-each-to-mark-that-board-active-for-the-game",
+      "featureTitle": "On the Spirits of the Wild setup screen, add a new section titled \"Character Board Selection\" directly below the existing player selection section, listing backend-fetched animals/characters with a checkbox next to each to mark that board active for the game.",
+      "files": [
+        "frontend/src/hooks/useSpiritsOfTheWildAnimals.ts",
+        "frontend/src/screens/SessionSetupScreen.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-the-scoring-experience-so-that-only-the-character-board-score-entry-ui-for-the-selected-checked-board-s-is-shown-and-unselected-boards-do-not-appear-at-all-during-scoring",
+      "featureTitle": "Update the scoring experience so that only the character board score entry UI for the selected (checked) board(s) is shown, and unselected boards do not appear at all during scoring.",
+      "files": [
+        "frontend/src/components/scores/EditRoundDialog.tsx",
+        "frontend/src/screens/ScoreSheetScreen.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
       ],
       "confidence": "high"
     }

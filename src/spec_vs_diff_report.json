@@ -1,48 +1,50 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T20:49:03.587Z",
-  "summary": "Diff updates Phase10ScoreEntry to initialize phase-complete state to false for new rounds and snapshots completion state at submit time, but evidence is insufficient/absent for the required visual checkbox behavior and for ensuring phase progression is applied only when completed=true across both saved and quick sessions. The code also retains an optional one-way (non-uncheckable) checkbox mode that can conflict with the requested free toggling behavior.",
+  "generatedAt": "2026-02-14T01:12:57.251Z",
+  "summary": "Frontend work was added for fetching Spirits of the Wild animals and selecting/filtering character boards in setup/scoring, but the diff summary does not provide sufficient evidence that the backend now stores a seeded animal catalog, exposes an authorized query API to retrieve it, or persists the selected active character boards in saved game sessions (and returns them on load).",
   "missing_requirements": [
     {
-      "id": "REQ-2",
-      "requirement": "Ensure the Phase 10 phase-complete checkbox visually behaves like a standard checkbox: the checkmark is visible only when checked and not visible when unchecked; no custom styling causes the check indicator to remain visible when unchecked.",
-      "reason": "The diff snippet does not show the actual Checkbox rendering props/styling (truncated after computing isChecked). There is no evidence in the provided diff summary that the visual checkmark issue was addressed.",
+      "id": "REQ-1",
+      "requirement": "Add a backend-stored animal/character catalog for Spirits of the Wild with stable id, name, icon, seeded with Owl, and retrievable via a query call.",
+      "reason": "Although backend/main.mo defines a SpiritsOfTheWildAnimal type, the diff summary does not show any initialized backend catalog containing Owl or any query call returning it. The only concrete retrieval shown is a frontend hook calling actor.getSpiritsOfTheWildAnimals(), but the backend implementation of that method and any seeded data is not present in the shown backend diff.",
       "evidence": [
-        "frontend/src/components/scores/Phase10ScoreEntry.tsx (truncated)"
+        "backend/main.mo",
+        "frontend/src/hooks/useSpiritsOfTheWildAnimals.ts"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Expose backend query API(s) to fetch the full list of animals/characters (id, name, icon) with consistent authorization and usable via generated Candid types.",
+      "reason": "The frontend calls actor.getSpiritsOfTheWildAnimals(), but the diff summary does not show a corresponding public query method in backend/main.mo, nor any evidence of applying the app’s existing authorization approach to that read API.",
+      "evidence": [
+        "frontend/src/hooks/useSpiritsOfTheWildAnimals.ts",
+        "backend/main.mo"
       ]
     },
     {
       "id": "REQ-3",
-      "requirement": "During Phase 10 score submission, only record/log phase completion if checked at submission time; for saved sessions backend submission must not increment/update progress where completed=false; for quick sessions local phase10Progress must not increment for completed=false.",
-      "reason": "Frontend now snapshots `phaseCompletions` into `entryState` at submission time, but the diff provides no evidence that saved-session submission payload handling/backend update logic filters out completed=false, nor that quick-session local phase10Progress update logic ignores false completions. No backend files were modified in this diff summary.",
+      "requirement": "Persist selected active character board IDs in a saved Spirits of the Wild game session on create, return them when loading, and keep old sessions loading successfully with a sensible default/empty selection.",
+      "reason": "The frontend appears to pass/consume activeSpiritsAnimalIds via local state/navigation state (e.g., ScoreSheetScreen extracts from location.state), but there is no evidence in the backend diff summary that game sessions store active character board IDs, include them in returned session data, or handle backward compatibility for existing sessions.",
       "evidence": [
-        "frontend/src/components/scores/Phase10ScoreEntry.tsx (truncated)",
-        "frontend/src/screens/ScoreSheetScreen.tsx (truncated)"
+        "frontend/src/lib/sessionTypes.ts",
+        "frontend/src/screens/ScoreSheetScreen.tsx",
+        "backend/main.mo",
+        "backend/migration.mo"
       ]
     }
   ],
-  "hallucinated_features": [
-    {
-      "description": "Optional one-way (non-uncheckable) phase-complete checkbox behavior via `oneWayCheckbox` prop that prevents unchecking once checked.",
-      "reason": "BuildRequest requires free toggling (check and uncheck) before submission; adding/retaining a mode that blocks unchecking is not requested and can directly violate REQ-1 depending on how it is used.",
-      "evidence": [
-        "frontend/src/components/scores/Phase10ScoreEntry.tsx (truncated)"
-      ]
-    },
-    {
-      "description": "Clamping Phase 10 progress/current phase values to the 1–10 range when reading session state.",
-      "reason": "Not requested by the BuildRequest (which explicitly calls out not changing Phase 10 sorting/standings logic and focuses only on checkbox submission behavior). This may be benign, but it is an unrequested behavioral change shown in the diff.",
-      "evidence": [
-        "frontend/src/screens/ScoreSheetScreen.tsx (truncated)"
-      ]
-    }
-  ],
+  "hallucinated_features": [],
   "confidence": 0.62,
   "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/scores/Phase10ScoreEntry.tsx",
+    "frontend/src/components/scores/EditRoundDialog.tsx",
+    "frontend/src/hooks/useSpiritsOfTheWildAnimals.ts",
+    "frontend/src/lib/sessionTypes.ts",
     "frontend/src/screens/ScoreSheetScreen.tsx",
+    "frontend/src/screens/SessionSetupScreen.tsx",
     "project_state.json"
   ]
 }

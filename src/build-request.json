@@ -1,88 +1,120 @@
 {
   "kind": "build_request",
-  "title": "Fix Phase 10 phase-complete checkbox toggle and logging on score submission",
+  "title": "Store character boards (name + icon) on backend and enable Character Board Selection for Spirits of the Wild",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "On the Phase 10 score submission screen, allow the user to toggle the “phase complete” checkbox freely before submitting scores (checked and unchecked), with the default state unchecked for all players when starting a new round.",
-      "target": "frontend",
+      "text": "Add a backend-stored animal/character catalog for Spirits of the Wild where each animal has a stable ID, a name, and an icon, and seed the catalog with at least one animal: Owl.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-12"
         ],
         "quotes": [
-          "The Phase 10 score submission screen.",
-          "The default state is unchecked. If checked, the player should have the ability to uncheck the box before submitting"
+          "An icon and the name should be stored on the backend"
         ]
       },
       "acceptanceCriteria": [
-        "When starting a new Phase 10 round entry, each player's phase-complete checkbox is unchecked by default.",
-        "If a user checks a player's box and then unchecks it before pressing “Submit Score”, the checkbox returns to unchecked state (no UI lock-in).",
-        "This behavior applies for the Phase 10 score submission flow rendered from ScoreSheetScreen."
+        "Backend exposes a typed Animal/Character record that includes at least: id, name, icon.",
+        "Backend has an initialized catalog containing Owl.",
+        "Catalog data is retrievable via a query call without requiring any frontend hardcoded animal list."
       ]
     },
     {
       "id": "REQ-2",
-      "text": "Ensure the Phase 10 phase-complete checkbox visually behaves like a standard checkbox: the checkmark is visible only when checked and not visible when unchecked.",
-      "target": "frontend",
+      "text": "Expose backend query API(s) to fetch the full list of animals/characters (including name + icon) for use on the setup screen.",
+      "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-6",
+          "msg-12"
         ],
         "quotes": [
-          "When the box is checked the check mark appears. When the box is unchecked the check mark is not visible."
+          "The list of animals should be stored on the backend.",
+          "An icon and the name should be stored on the backend"
         ]
       },
       "acceptanceCriteria": [
-        "Toggling the checkbox to checked displays the check indicator.",
-        "Toggling the checkbox to unchecked hides the check indicator.",
-        "No custom styling causes the check indicator to remain visible when unchecked."
+        "There is a public query method that returns an array of animals/characters including id, name, icon.",
+        "The method enforces the app’s existing authorization rules consistently (same permission approach as other read APIs).",
+        "The frontend can call the method through the generated Candid types without type casting hacks."
       ]
     },
     {
       "id": "REQ-3",
-      "text": "During Phase 10 score submission, only record/log a phase completion for a player if their phase-complete checkbox is checked at the moment the round is submitted; if unchecked at submission time, do not apply phase progression for that player.",
+      "text": "Persist selected active character board(s) for a Spirits of the Wild game session, so the selection made on the setup screen is stored and can be used when rendering scoring screens.",
       "target": "both",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4",
+          "msg-6"
         ],
         "quotes": [
-          "Unchecking the box should be the phase is not complete, do not log a phase complete.",
-          "The box check is only logged as phase complete if the box is checked at the time of the scores being submitted."
+          "When checked, the selected board should be available for scoring on the score entry screen.",
+          "Only the checked board should be shown on the score entry screen."
         ]
       },
       "acceptanceCriteria": [
-        "If a player’s checkbox is unchecked at submission time, the submitted payload and any derived updates do not treat that player as having completed a phase for that round.",
-        "If a player’s checkbox is checked at submission time, the submitted payload and any derived updates treat that player as having completed a phase for that round.",
-        "For saved sessions, the backend submission endpoint does not increment/update Phase 10 progress for any completion entries where completed=false.",
-        "For quick sessions (local-only), the local phase10Progress update logic does not increment phase for any players whose completion flag is false."
+        "When starting a non-quick (saved) session, the selected character board IDs are sent to the backend and stored with the created game session.",
+        "When loading a saved session, the stored active character board IDs are returned to the frontend as part of the session data.",
+        "Existing saved sessions created before this change still load successfully (missing selection defaults to an empty selection or a sensible default for Owl)."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "On the Spirits of the Wild setup screen, add a new section titled \"Character Board Selection\" directly below the existing player selection section, listing backend-fetched animals/characters with a checkbox next to each to mark that board active for the game.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-5",
+          "msg-6"
+        ],
+        "quotes": [
+          "Below the player selection section.",
+          "Each animal displayed on the setup screen has a checkbox to mark that board as active for the game."
+        ]
+      },
+      "acceptanceCriteria": [
+        "The setup screen displays a \"Character Board Selection\" section directly below the player selection UI.",
+        "The animals/characters shown come from the backend API (not a hardcoded list).",
+        "Each listed animal shows its icon and name and a checkbox reflecting selection state.",
+        "Starting the game includes the selected board IDs in the created session (or quick session state for quick games)."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Update the scoring experience so that only the character board score entry UI for the selected (checked) board(s) is shown, and unselected boards do not appear at all during scoring.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-6"
+        ],
+        "quotes": [
+          "Only the checked board should be shown on the score entry screen.",
+          "Unselected boards must not appear at all during scoring."
+        ]
+      },
+      "acceptanceCriteria": [
+        "If only Owl is selected, only the Owl score entry UI is rendered (using the existing SpiritsOwlScoreEntry).",
+        "If multiple boards are selected, only those selected boards render (and no UI is rendered for unselected boards).",
+        "If no boards are selected, the UI clearly prompts the user to select at least one board (or applies a defined default) rather than silently showing all boards.",
+        "No unselected character board UI is visible anywhere on the score entry flow."
       ]
     }
   ],
   "constraints": [
-    "Do not modify any files under frontend/src/components/ui (Shadcn UI components are read-only and must be composed, not edited).",
-    "Do not edit frontend immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx.",
-    "Backend changes (if needed) must remain within the single-actor architecture in backend/main.mo; only add backend/migration.mo if state schema changes are required."
+    "Backend must remain a single Motoko actor in backend/main.mo; do not introduce additional backend services.",
+    "Do not edit any frontend files under frontend/src/components/ui or any paths listed in frontend.immutablePaths.",
+    "Keep user-facing text in English."
   ],
   "nonGoals": [
-    "Do not change Phase 10 sorting/standings logic.",
-    "Do not add new gameplay rules beyond the phase-complete checkbox submission behavior.",
-    "Do not redesign unrelated parts of the score sheet UI."
+    "Designing new character board scoring rules beyond Owl.",
+    "Adding third-party auth providers (only Internet Identity is supported).",
+    "Adding real-time multiplayer or websocket-based synchronization."
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [],
-    "goalsToRemove": [],
-    "preferencesToAdd": [],
-    "preferencesToRemove": [],
-    "miscToAdd": [],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

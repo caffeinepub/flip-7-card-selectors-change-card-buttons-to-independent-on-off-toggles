@@ -100,6 +100,11 @@ export const UserProfile = IDL.Record({
   'name' : IDL.Text,
   'email' : IDL.Opt(IDL.Text),
 });
+export const SpiritsOfTheWildAnimal = IDL.Record({
+  'id' : IDL.Nat,
+  'icon' : IDL.Text,
+  'name' : IDL.Text,
+});
 export const Phase10Completion = IDL.Record({
   'playerId' : IDL.Nat,
   'completed' : IDL.Bool,
@@ -132,6 +137,11 @@ export const idlService = IDL.Service({
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getGameSession' : IDL.Func([IDL.Nat], [GameSession], ['query']),
   'getPlayerProfile' : IDL.Func([IDL.Nat], [PlayerProfile], ['query']),
+  'getSpiritsOfTheWildAnimals' : IDL.Func(
+      [],
+      [IDL.Vec(SpiritsOfTheWildAnimal)],
+      ['query'],
+    ),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -139,6 +149,12 @@ export const idlService = IDL.Service({
     ),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'selectSpiritsOfTheWildAnimal' : IDL.Func(
+      [IDL.Nat, IDL.Nat, IDL.Nat],
+      [],
+      [],
+    ),
+  'setActiveSpiritsOfTheWildAnimals' : IDL.Func([IDL.Vec(IDL.Nat)], [], []),
   'submitPhase10Round' : IDL.Func(
       [IDL.Nat, IDL.Nat, IDL.Vec(PlayerScore), IDL.Vec(Phase10Completion)],
       [],
@@ -239,6 +255,11 @@ export const idlFactory = ({ IDL }) => {
     'name' : IDL.Text,
     'email' : IDL.Opt(IDL.Text),
   });
+  const SpiritsOfTheWildAnimal = IDL.Record({
+    'id' : IDL.Nat,
+    'icon' : IDL.Text,
+    'name' : IDL.Text,
+  });
   const Phase10Completion = IDL.Record({
     'playerId' : IDL.Nat,
     'completed' : IDL.Bool,
@@ -271,6 +292,11 @@ export const idlFactory = ({ IDL }) => {
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getGameSession' : IDL.Func([IDL.Nat], [GameSession], ['query']),
     'getPlayerProfile' : IDL.Func([IDL.Nat], [PlayerProfile], ['query']),
+    'getSpiritsOfTheWildAnimals' : IDL.Func(
+        [],
+        [IDL.Vec(SpiritsOfTheWildAnimal)],
+        ['query'],
+      ),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -278,6 +304,12 @@ export const idlFactory = ({ IDL }) => {
       ),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'selectSpiritsOfTheWildAnimal' : IDL.Func(
+        [IDL.Nat, IDL.Nat, IDL.Nat],
+        [],
+        [],
+      ),
+    'setActiveSpiritsOfTheWildAnimals' : IDL.Func([IDL.Vec(IDL.Nat)], [], []),
     'submitPhase10Round' : IDL.Func(
         [IDL.Nat, IDL.Nat, IDL.Vec(PlayerScore), IDL.Vec(Phase10Completion)],
         [],

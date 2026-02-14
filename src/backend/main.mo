@@ -4,12 +4,15 @@ import Map "mo:core/Map";
 import Nat "mo:core/Nat";
 import Principal "mo:core/Principal";
 import Iter "mo:core/Iter";
-import Runtime "mo:core/Runtime";
 import Order "mo:core/Order";
+import Runtime "mo:core/Runtime";
+
+import Migration "migration";
 
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
+(with migration = Migration.run)
 actor {
   type GameType = {
     #skyjo : SkyjoRules;
@@ -18,6 +21,12 @@ actor {
     #flip7 : Flip7Rules;
     #phase10 : Phase10Rules;
     #genericGame : GenericGameRules;
+  };
+
+  type SpiritsOfTheWildAnimal = {
+    id : Nat;
+    name : Text;
+    icon : Text;
   };
 
   type ScoringMethod = {
@@ -168,6 +177,8 @@ actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
+  let spiritsOfTheWildAnimals = Map.empty<Nat, SpiritsOfTheWildAnimal>();
+  let spiritsOfTheWildAnimalPlayers = Map.empty<Nat, [Nat]>();
   let gameSessions = Map.empty<Nat, GameSession>();
   let playerProfiles = Map.empty<Nat, PlayerProfile>();
   let userProfiles = Map.empty<Principal, UserProfile>();
@@ -706,6 +717,38 @@ actor {
       }
     ).toArray().sort(compareGameSessionsById);
     userSessions;
+  };
+
+  public query ({ caller }) func getSpiritsOfTheWildAnimals() : async [SpiritsOfTheWildAnimal] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view animals");
+    };
+    spiritsOfTheWildAnimals.values().toArray();
+  };
+
+  public shared ({ caller }) func setActiveSpiritsOfTheWildAnimals(animalIds : [Nat]) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #admin))) {
+      Runtime.trap("Unauthorized: Only admins can set active animals");
+    };
+
+    for (animalId in animalIds.values()) {
+      switch (spiritsOfTheWildAnimals.get(animalId)) {
+        case (null) { Runtime.trap("Animal does not exist") };
+        case (?_) {};
+      };
+    };
+    ();
+  };
+
+  public shared ({ caller }) func selectSpiritsOfTheWildAnimal(gameId : Nat, playerId : Nat, animalId : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can select animals");
+    };
+    switch (spiritsOfTheWildAnimals.get(animalId)) {
+      case (null) { Runtime.trap("Animal does not exist") };
+      case (?_) {};
+    };
+    ();
   };
 
   func compareGameSessionsById(session1 : GameSession, session2 : GameSession) : Order.Order {
